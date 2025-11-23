@@ -11,6 +11,7 @@ namespace Benkei
         private readonly Action<bool> _setRepeatAllowed;
         private readonly Action _resetRequest;
         private readonly HashSet<ushort> _latchedKeys = new HashSet<ushort>();
+        private static readonly IntPtr BenkeiMarker = new IntPtr(0x42454E4B); // "BENK"
 
         public KeyActionExecutor(Action<bool> setRepeatAllowed, Action resetRequest)
         {
@@ -145,7 +146,7 @@ namespace Benkei
                         wVk = keyCode,
                         wScan = 0,
                         dwFlags = keyUp ? KeyeventfKeyup : 0,
-                        dwExtraInfo = GetMessageExtraInfo()
+                        dwExtraInfo = BenkeiMarker
                     }
                 }
             };
@@ -177,7 +178,7 @@ namespace Benkei
                         wVk = 0,
                         wScan = rune,
                         dwFlags = keyUp ? KeyeventfUnicode | KeyeventfKeyup : KeyeventfUnicode,
-                        dwExtraInfo = GetMessageExtraInfo()
+                        dwExtraInfo = BenkeiMarker
                     }
                 }
             };
