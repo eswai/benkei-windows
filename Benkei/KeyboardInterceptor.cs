@@ -185,35 +185,31 @@ namespace Benkei
                 return false;
             }
 
-            var context = ImmGetContext(foreground);
-            if (context == IntPtr.Zero)
+            var defaultContext = ImmGetDefaultIMEWnd(foreground);
+            if (defaultContext == IntPtr.Zero)
             {
-                Console.WriteLine("[Interceptor] IMEコンテキストの取得に失敗");
-                return true;
+                Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                return false;
             }
 
-            try
+            // IMEの状態を取得
+            var result = SendMessage(defaultContext, WmImeControl, new IntPtr(ImcGetopenstatus), IntPtr.Zero);
+            var isOpen = result.ToInt32() != 0;
+            
+            if (!isOpen)
             {
-                if (!ImmGetOpenStatus(context))
-                {
-                    Console.WriteLine("[Interceptor] IMEがオープンではありません");
-                    return false;
-                }
-
-                const int ImeCmodeNative = 0x0001;
-                if (ImmGetConversionStatus(context, out var conversion, out _))
-                {
-                    Console.WriteLine("[Interceptor] IMEの変換モードを確認");
-                    return (conversion & ImeCmodeNative) != 0;
-                }
-
-                Console.WriteLine("[Interceptor] 日本語入力モード");
-                return true;
+                Console.WriteLine("[Interceptor] IMEがオフ（英数モード）");
+                return false;
             }
-            finally
-            {
-                ImmReleaseContext(foreground, context);
-            }
+
+            // 変換モードを取得
+            var conversionResult = SendMessage(defaultContext, WmImeControl, new IntPtr(ImmGetconversionmode), IntPtr.Zero);
+            var conversion = conversionResult.ToInt32();
+            
+            const int ImeCmodeNative = 0x0001;
+            var isNativeMode = (conversion & ImeCmodeNative) != 0;
+            Console.WriteLine($"[Interceptor] IME変換モード: 0x{conversion:X}, ネイティブ: {isNativeMode}");
+            return isNativeMode;
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -233,6 +229,9 @@ namespace Benkei
         private const int WmKeyup = 0x0101;
         private const int WmSyskeydown = 0x0104;
         private const int WmSyskeyup = 0x0105;
+        private const int WmImeControl = 0x0283;
+        private const int ImmGetconversionmode = 0x0001;
+        private const int ImcGetopenstatus = 0x0005;
         private static readonly IntPtr BenkeiMarker = new IntPtr(0x42454E4B); // "BENK"
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -257,15 +256,9 @@ namespace Benkei
         private static extern IntPtr GetKeyboardLayout(uint idThread);
 
         [DllImport("imm32.dll")]
-        private static extern IntPtr ImmGetContext(IntPtr hWnd);
+        private static extern IntPtr ImmGetDefaultIMEWnd(IntPtr hWnd);
 
-        [DllImport("imm32.dll")]
-        private static extern bool ImmReleaseContext(IntPtr hWnd, IntPtr hIMC);
-
-        [DllImport("imm32.dll")]
-        private static extern bool ImmGetOpenStatus(IntPtr hIMC);
-
-        [DllImport("imm32.dll")]
-        private static extern bool ImmGetConversionStatus(IntPtr hIMC, out int conversion, out int sentence);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
     }
 }
