@@ -876,11 +876,6 @@
     - tap: A
 # ---------------------------------------- 非かな変換
 - mae: []
-  douji: [F, G]
-  type:
-    - tap: JIS_Eisu
-    - reset: true
-- mae: []
   douji: [U]
   type:
     - tap: Backspace

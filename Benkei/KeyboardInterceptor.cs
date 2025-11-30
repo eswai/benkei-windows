@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Benkei
 {
@@ -14,6 +15,13 @@ namespace Benkei
         private IntPtr _hookHandle = IntPtr.Zero;
         private bool _allowRepeat;
         private bool _isRepeating;
+
+        const int IMC_SETCONVERSIONMODE = 2;
+        const int IME_CMODE_NATIVE    =  1;
+        const int IME_CMODE_KATAKANA  =  2;
+        const int IME_CMODE_FULLSHAPE =  8;
+        const int IME_CMODE_ROMAN     = 16;
+        const int CMode_Hiragana    = IME_CMODE_ROMAN | IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
 
         public KeyboardInterceptor(NaginataEngine engine)
         {
@@ -93,6 +101,52 @@ namespace Benkei
                 if (hookData.dwExtraInfo == BenkeiMarker)
                 {
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                }
+
+                // IsJapaneseInputActive == falseのとき
+                // HとJを同時に押すと、IMEをONにする
+                if (isKeyDown && (keyCode == (int)Keys.H || keyCode == (int)Keys.J))
+                {
+                    _pressedPhysicalKeys.Add(keyCode);
+                    if (_pressedPhysicalKeys.Contains((int)Keys.H) &&
+                        _pressedPhysicalKeys.Contains((int)Keys.J))
+                    {
+                        Console.WriteLine("[Interceptor] IME ON トグル");
+                        var foreground = GetForegroundWindow();
+                        var defaultContext = ImmGetDefaultIMEWnd(foreground);
+                        if (defaultContext != IntPtr.Zero)
+                        {
+                            const int ImcSetopenstatus = 0x0006;
+                            SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(1));
+                            SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)CMode_Hiragana);
+                        } else
+                        {
+                            Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                        }
+                        return (IntPtr)1;
+                    }
+                }
+
+                if (isKeyDown && (keyCode == (int)Keys.F || keyCode == (int)Keys.G))
+                {
+                    _pressedPhysicalKeys.Add(keyCode);
+                    if (_pressedPhysicalKeys.Contains((int)Keys.F) &&
+                        _pressedPhysicalKeys.Contains((int)Keys.G))
+                    {
+                        Console.WriteLine("[Interceptor] IME OFF トグル");
+                        var foreground = GetForegroundWindow();
+                        var defaultContext = ImmGetDefaultIMEWnd(foreground);
+                        if (defaultContext != IntPtr.Zero)
+                        {
+                            const int ImcSetopenstatus = 0x0006;
+                            SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(0));
+                            // SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)IME_CMODE_NATIVE);
+                        } else
+                        {
+                            Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                        }
+                        return (IntPtr)1;
+                    }
                 }
 
                 if (!_engine.IsNaginataKey(keyCode) || !IsJapaneseInputActive())
