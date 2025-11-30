@@ -100,13 +100,13 @@ namespace Benkei
             return true;
         }
 
-        private void TapKey(ushort key)
+        public void TapKey(ushort key)
         {
             SendKey(key, false);
             SendKey(key, true);
         }
 
-        private void PressKey(ushort key)
+        public void PressKey(ushort key)
         {
             if (_latchedKeys.Add(key))
             {
@@ -114,7 +114,7 @@ namespace Benkei
             }
         }
 
-        private void ReleaseKey(ushort key)
+        public void ReleaseKey(ushort key)
         {
             _latchedKeys.Remove(key);
             SendKey(key, true);

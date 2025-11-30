@@ -876,6 +876,14 @@
     - tap: A
 # ---------------------------------------- 非かな変換
 - mae: []
+  douji: [F, G]
+  type:
+    - tap: IMEOFF
+- mae: []
+  douji: [H, J]
+  type:
+    - tap: IMEON
+- mae: []
   douji: [U]
   type:
     - tap: Backspace

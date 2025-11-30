@@ -94,8 +94,8 @@ namespace Benkei
             ["RightOption"] = (int)Keys.RMenu,
             ["Function"] = (int)Keys.F13,
 
-            ["JIS_Eisu"] = VkNonConvert,
-            ["JIS_Kana"] = VkKana,
+            ["IMEON"] = 0x16,
+            ["IMEOFF"] = 0x1A,
             ["JIS_KeypadComma"] = VkOemNecEqual,
             ["JIS_Underscore"] = VkOem102,
             ["JIS_Yen"] = VkOemYen

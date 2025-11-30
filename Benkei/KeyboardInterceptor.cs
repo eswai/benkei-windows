@@ -15,6 +15,7 @@ namespace Benkei
         private IntPtr _hookHandle = IntPtr.Zero;
         private bool _allowRepeat;
         private bool _isRepeating;
+        private int hjbuf = -1; // HJ同時押しバッファ
 
         const int IMC_SETCONVERSIONMODE = 2;
         const int IME_CMODE_NATIVE    =  1;
@@ -103,49 +104,95 @@ namespace Benkei
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
+                if (IsJapaneseInputActive() == false) {
                 // IsJapaneseInputActive == falseのとき
                 // HとJを同時に押すと、IMEをONにする
-                if (isKeyDown && (keyCode == (int)Keys.H || keyCode == (int)Keys.J))
-                {
-                    _pressedPhysicalKeys.Add(keyCode);
-                    if (_pressedPhysicalKeys.Contains((int)Keys.H) &&
-                        _pressedPhysicalKeys.Contains((int)Keys.J))
-                    {
-                        Console.WriteLine("[Interceptor] IME ON トグル");
-                        var foreground = GetForegroundWindow();
-                        var defaultContext = ImmGetDefaultIMEWnd(foreground);
-                        if (defaultContext != IntPtr.Zero)
+                // kana_on同時押しの処理（マッピング後のキーコードで判定）
+                // if type == .keyDown {
+                //     if hjbuf == -1 {
+                //         if kanaOnKeys.count >= 2 && (targetKeyCode == kanaOnKeys[0] || targetKeyCode == kanaOnKeys[1]) {
+                //             hjbuf = originalKeyCode; // 元のキーコードを保存
+                //             return nil;
+                //         } else {
+                //             // マッピングされたキーを送信
+                //             postKeyEvent(keyCode: targetKeyCode, keyDown: true)
+                //             return nil
+                //         }
+                    if (isKeyDown) {
+                        if (hjbuf == -1)
                         {
-                            const int ImcSetopenstatus = 0x0006;
-                            SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(1));
-                            SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)CMode_Hiragana);
-                        } else
-                        {
-                            Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                            if (keyCode == (int)Keys.H || keyCode == (int)Keys.J)
+                            {
+                                hjbuf = keyCode; // 元のキーコードを保存
+                                return (IntPtr)1;
+                            } else {
+                                _executor.PressKey((ushort)hjbuf);
+                                return (IntPtr)1;
+                            }
+                //     } else {
+                //         let hjbufMapped = abcMapping[hjbuf] ?? hjbuf
+                //         if hjbufMapped + targetKeyCode == kanaOnKeys[0] + kanaOnKeys[1] {
+                //             sendJISKanaKey()
+                //             hjbuf = -1
+                //             return nil
+                //         } else {
+                //             // バッファのキーとマッピングされたキーを両方送信
+                //             let hjbufTargetKeyCode = abcMapping[hjbuf] ?? hjbuf
+                //             postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: true)
+                //             postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: false)
+                //             postKeyEvent(keyCode: targetKeyCode, keyDown: true)
+                //             pressedKeys.remove(hjbuf)
+                //             hjbuf = -1
+                //             return nil
+                //         }
+                //     }
                         }
-                        return (IntPtr)1;
+                        else
+                        {
+                            if (hjbuf + keyCode == (int)Keys.H + (int)Keys.J)
+                            {
+                                Console.WriteLine("[Interceptor] IME ON トグル");
+                                IMEON();
+                                hjbuf = -1;
+                                return (IntPtr)1;
+                            } else {
+                                _executor.TapKey((ushort)hjbuf);
+                                _executor.PressKey((ushort)keyCode);
+                                _pressedPhysicalKeys.Remove(hjbuf);
+                                hjbuf = -1;
+                                return (IntPtr)1;
+                            }
+                        }
+                // } else if type == .keyUp {
+                //     if hjbuf > -1 && hjbuf == originalKeyCode {
+                //         let hjbufTargetKeyCode = abcMapping[hjbuf] ?? hjbuf
+                //         postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: true)
+                //         postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: false)
+                //         pressedKeys.remove(hjbuf)
+                //         hjbuf = -1
+                //         return nil
+                //     } else {
+                //         // マッピングされたキーのキーアップを送信
+                //         postKeyEvent(keyCode: targetKeyCode, keyDown: false)
+                //         return nil
+                //     }
+                // }
                     }
-                }
-
-                if (isKeyDown && (keyCode == (int)Keys.F || keyCode == (int)Keys.G))
-                {
-                    _pressedPhysicalKeys.Add(keyCode);
-                    if (_pressedPhysicalKeys.Contains((int)Keys.F) &&
-                        _pressedPhysicalKeys.Contains((int)Keys.G))
+                    else
                     {
-                        Console.WriteLine("[Interceptor] IME OFF トグル");
-                        var foreground = GetForegroundWindow();
-                        var defaultContext = ImmGetDefaultIMEWnd(foreground);
-                        if (defaultContext != IntPtr.Zero)
+                        if (hjbuf > -1 && hjbuf == keyCode)
                         {
-                            const int ImcSetopenstatus = 0x0006;
-                            SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(0));
-                            // SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)IME_CMODE_NATIVE);
-                        } else
-                        {
-                            Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                            _executor.TapKey((ushort)hjbuf);
+                            _pressedPhysicalKeys.Remove(hjbuf);
+                            hjbuf = -1;
+                            return (IntPtr)1;
                         }
-                        return (IntPtr)1;
+                        else
+                        {
+                            // マッピングされたキーのキーアップを送信
+                            _executor.ReleaseKey((ushort)keyCode);
+                            return (IntPtr)1;
+                        }
                     }
                 }
 
@@ -205,6 +252,32 @@ namespace Benkei
             }
 
             return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+        }
+
+        private void IMEON() 
+        {
+            var foreground = GetForegroundWindow();
+            var defaultContext = ImmGetDefaultIMEWnd(foreground);
+            if (defaultContext != IntPtr.Zero)
+            {
+                const int ImcSetopenstatus = 0x0006;
+                SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(1));
+                SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)CMode_Hiragana);
+            }
+            _engine.Reset();
+        }
+
+        private void IMEOFF() 
+        {
+            var foreground = GetForegroundWindow();
+            var defaultContext = ImmGetDefaultIMEWnd(foreground);
+            if (defaultContext != IntPtr.Zero)
+            {
+                const int ImcSetopenstatus = 0x0006;
+                SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(0));
+                // SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)IME_CMODE_NATIVE);
+            }
+            _engine.Reset();
         }
 
         private void SetRepeatAllowed(bool allowed)
