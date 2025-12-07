@@ -59,5 +59,15 @@ namespace Benkei.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   naginata.ico に類似したローカライズされたアイコンを検索します。
+        /// </summary>
+        internal static System.Drawing.Icon NaginataTrayIcon {
+            get {
+                object obj = ResourceManager.GetObject("NaginataTrayIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }

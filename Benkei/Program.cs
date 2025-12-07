@@ -32,11 +32,57 @@ namespace Benkei
             Console.WriteLine("[Benkei] アプリケーション起動");
             Console.WriteLine($"[Benkei] 起動時刻: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+            Application.ThreadException += (sender, args) =>
+            {
+                LogException("UI thread", args.Exception);
+            };
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                LogException("AppDomain", args.ExceptionObject as Exception);
+            };
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            try
+            {
+                Application.Run(new Form1());
+            }
+            catch (Exception ex)
+            {
+                LogException("Main loop", ex);
+                throw;
+            }
 
             Console.WriteLine("[Benkei] アプリケーション終了");
+        }
+
+        private static void LogException(string source, Exception ex)
+        {
+            try
+            {
+                if (ex == null)
+                {
+                    Console.WriteLine($"[Benkei] {source}: (null exception)");
+                    return;
+                }
+
+                var level = 0;
+                var current = ex;
+                while (current != null)
+                {
+                    var prefix = level == 0 ? source : $"{source}/Inner({level})";
+                    Console.WriteLine($"[Benkei] 例外({prefix}): {current.GetType().FullName}");
+                    Console.WriteLine($"[Benkei] メッセージ: {current.Message}");
+                    Console.WriteLine($"[Benkei] スタックトレース: {current.StackTrace}");
+                    current = current.InnerException;
+                    level++;
+                }
+            }
+            catch (Exception logEx)
+            {
+                Console.WriteLine($"[Benkei] 例外ログ出力に失敗 ({source}): {logEx.GetType().FullName} {logEx.Message}");
+            }
         }
     }
 }

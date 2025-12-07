@@ -152,7 +152,7 @@ namespace Benkei
             };
 
             var cbSize = Marshal.SizeOf(typeof(INPUT));
-            Debug.WriteLine($"[SendKey] Sending key: {keyCode}, keyUp: {keyUp}, cbSize: {cbSize}");
+            Console.WriteLine($"[SendKey] Sending key: {keyCode}, keyUp: {keyUp}, cbSize: {cbSize}");
             var result = SendInput(1, new[] { input }, cbSize);
             if (result == 0)
             {
