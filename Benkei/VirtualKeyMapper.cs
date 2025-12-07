@@ -59,7 +59,6 @@ namespace Benkei
             ["Tab"] = (int)Keys.Tab,
             ["Escape"] = (int)Keys.Escape,
             ["Delete"] = (int)Keys.Delete,
-            ["ForwardDelete"] = (int)Keys.Delete,
             ["Backspace"] = (int)Keys.Back,
             ["CapsLock"] = (int)Keys.CapsLock,
             ["UpArrow"] = (int)Keys.Up,
@@ -92,13 +91,12 @@ namespace Benkei
             ["Option"] = (int)Keys.Menu,
             ["Alt"] = (int)Keys.Menu,
             ["RightOption"] = (int)Keys.RMenu,
-            ["Function"] = (int)Keys.F13,
 
             ["IMEON"] = 0x16,
             ["IMEOFF"] = 0x1A,
-            ["JIS_KeypadComma"] = VkOemNecEqual,
-            ["JIS_Underscore"] = VkOem102,
-            ["JIS_Yen"] = VkOemYen
+            ["Henkan"] = (int)Keys.IMEConvert,
+            ["Muhenkan"] = (int)Keys.IMENonconvert,
+            ["KanaMode"] = (int)Keys.KanaMode
         };
 
         private static readonly HashSet<int> NaginataKeys = new HashSet<int>(

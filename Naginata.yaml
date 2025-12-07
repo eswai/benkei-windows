@@ -944,6 +944,7 @@
   type:
   # ／{改行}
     - character: ／
+    - tap: Return
 # - mae: [J, K]
 #   douji: [E]
 - mae: [J, K]
@@ -957,57 +958,67 @@
   douji: [T]
   type:
   # ・(未確定)
-    - tap: Slash
+    - character: ・
 - mae: [J, K]
   douji: [A]
   type:
   # ……{改行}
     - character: ……
+    - tap: Return
 - mae: [J, K]
   douji: [S]
   type:
   # 『{改行}
     - character: 『
+    - tap: Return
 - mae: [J, K]
   douji: [D]
   type:
   # ？{改行}
     - character: ？
+    - tap: Return
 - mae: [J, K]
   douji: [F]
   type:
   # 「{改行}
     - character: 「
+    - tap: Return
 - mae: [J, K]
   douji: [G]
   type:
-  # ({改行}
-    - character: (
+  #  ({改行}
+    - character: （
+    - tap: Return
 - mae: [J, K]
   douji: [Z]
   type:
   # ――{改行}
     - character: ――
+    - tap: Return
 - mae: [J, K]
   douji: [X]
   type:
   # 』{改行}
     - character: 』
+    - tap: Return
 - mae: [J, K]
   douji: [C]
   type:
   # ！{改行}
     - character: ！
+    - tap: Return
 - mae: [J, K]
   douji: [V]
   type:
   # 」{改行}
     - character: 」
+    - tap: Return
 - mae: [J, K]
   douji: [B]
   type:
   # ){改行}
-    - character: )
+    - character: ）
+    - tap: Return
 - mae: [D, F]
   douji: [Y]
   type:
@@ -1025,7 +1036,7 @@
   douji: [I]
   type:
   # {vk1Csc079} 再変換
-    - tap: JIS_Henkan
+    - tap: Henkan
 - mae: [D, F]
   douji: [O]
   type:
@@ -1126,8 +1137,10 @@
     - character: ｜
 - mae: [M, Comma]
   douji: [W]
+  # 　　　×　　　×　　　×{改行 2}
   type:
     - character: 　　　×　　　×　　　×
+    - tap: Return
     - tap: Return
 - mae: [M, Comma]
   douji: [E]
@@ -1152,16 +1165,19 @@
   type:
   # 〇{改行}
     - character: 〇
+    - tap: Return
 - mae: [M, Comma]
   douji: [A]
   type:
   # 《{改行} 
     - character: 《
+    - tap: Return
 - mae: [M, Comma]
   douji: [S]
   type:
   # 【{改行}
     - character: 【
+    - tap: Return
 - mae: [M, Comma]
   douji: [D]
   type:
@@ -1196,16 +1212,19 @@
   type:
   # 》{改行}
     - character: 》
+    - tap: Return
 - mae: [M, Comma]
   douji: [X]
   type:
   # 】{改行}
     - character: 】
+    - tap: Return
 - mae: [M, Comma]
   douji: [C]
   type:
   # 」{改行}{改行}
     - character: 」
+    - tap: Return
     - tap: Return
 - mae: [M, Comma]
   douji: [V]
@@ -1213,7 +1232,9 @@
   # 」{改行}{改行}「{改行} 
     - character: 」
     - tap: Return
+    - tap: Return
     - character: 「
+    - tap: Return
 - mae: [M, Comma]
   douji: [B]
   type:
@@ -1239,8 +1260,7 @@
   douji: [I]
   type:
   # {vk1Csc079} 無変換
-    - tap: JIS_Kana
-    - tap: JIS_Kana
+    - tap: Muhenkan
 - mae: [C, V]
   douji: [O]
   type:
