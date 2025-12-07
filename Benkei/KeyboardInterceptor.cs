@@ -127,7 +127,7 @@ namespace Benkei
                                 return (IntPtr)1;
                             } else {
                                 _executor.PressKey((ushort)hjbuf);
-                                return (IntPtr)1;
+                                return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                             }
                 //     } else {
                 //         let hjbufMapped = abcMapping[hjbuf] ?? hjbuf
@@ -325,7 +325,7 @@ namespace Benkei
             
             if (!isOpen)
             {
-                Console.WriteLine("[Interceptor] IMEがオフ（英数モード）");
+                Console.WriteLine("[Interceptor] IME==オフ");
                 return false;
             }
 
