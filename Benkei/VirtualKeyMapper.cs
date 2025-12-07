@@ -7,11 +7,6 @@ namespace Benkei
 {
     internal static class VirtualKeyMapper
     {
-        private const int VkKana = 0x15;
-        private const int VkNonConvert = 0x1D;
-        private const int VkOemNecEqual = 0x92;
-        private const int VkOem102 = 0xE2;
-        private const int VkOemYen = 0xDC;
 
         private static readonly Dictionary<string, int> KeyCodes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
@@ -86,14 +81,13 @@ namespace Benkei
             ["RightShift"] = (int)Keys.RShiftKey,
             ["Control"] = (int)Keys.ControlKey,
             ["RightControl"] = (int)Keys.RControlKey,
-            ["Command"] = (int)Keys.ControlKey,
-            ["RightCommand"] = (int)Keys.RControlKey,
-            ["Option"] = (int)Keys.Menu,
+            ["Windows"] = (int)Keys.LWin,
+            ["RightWindows"] = (int)Keys.RWin,
             ["Alt"] = (int)Keys.Menu,
-            ["RightOption"] = (int)Keys.RMenu,
+            ["RightAlt"] = (int)Keys.RMenu,
 
-            ["IMEON"] = 0x16,
-            ["IMEOFF"] = 0x1A,
+            ["ImeOn"] = 0x16,
+            ["ImeOff"] = 0x1A,
             ["Henkan"] = (int)Keys.IMEConvert,
             ["Muhenkan"] = (int)Keys.IMENonconvert,
             ["KanaMode"] = (int)Keys.KanaMode

@@ -879,12 +879,12 @@
   douji: [F, G]
   type:
     - reset: true
-    - tap: IMEOFF
+    - tap: ImeOff
 - mae: []
   douji: [H, J]
   type:
     - reset: true
-    - tap: IMEON
+    - tap: ImeOn
 - mae: []
   douji: [U]
   type:
