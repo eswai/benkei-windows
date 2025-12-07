@@ -11,6 +11,9 @@ namespace Benkei
         private NotifyIcon _notifyIcon;
         private ContextMenuStrip _trayMenu;
         private bool _isExiting;
+        private ToolStripMenuItem _toggleConversionMenuItem;
+        private bool _conversionEnabled = true;
+        private string _configPath;
 
         public Form1()
         {
@@ -27,6 +30,7 @@ namespace Benkei
             {
                 Console.WriteLine("[Benkei] フォームロード開始");
                 var configPath = ResolveConfigPath();
+                _configPath = configPath;
                 Console.WriteLine($"[Benkei] 設定ファイル: {configPath}");
                 var loader = new NaginataConfigLoader();
                 var rules = loader.Load(configPath);
@@ -34,8 +38,13 @@ namespace Benkei
                 var engine = new NaginataEngine(rules);
                 _interceptor = new KeyboardInterceptor(engine);
                 _interceptor.Start();
+                _interceptor.SetConversionEnabled(_conversionEnabled);
                 Console.WriteLine("[Benkei] キーボードフック開始");
-                statusLabel.Text = $"動作中: {configPath}";
+                if (_toggleConversionMenuItem != null)
+                {
+                    _toggleConversionMenuItem.Enabled = true;
+                }
+                UpdateConversionUiState();
                 HideToTray();
             }
             catch (Exception ex)
@@ -83,8 +92,15 @@ namespace Benkei
         {
             _trayMenu = new ContextMenuStrip();
             var showMenuItem = new ToolStripMenuItem("状態を表示", null, OnTrayShowClick);
+            _toggleConversionMenuItem = new ToolStripMenuItem("入力変換を停止", null, OnToggleConversionClick)
+            {
+                CheckOnClick = false,
+                Checked = true,
+                Enabled = false
+            };
             var exitMenuItem = new ToolStripMenuItem("終了", null, OnTrayExitClick);
             _trayMenu.Items.Add(showMenuItem);
+            _trayMenu.Items.Add(_toggleConversionMenuItem);
             _trayMenu.Items.Add(new ToolStripSeparator());
             _trayMenu.Items.Add(exitMenuItem);
 
@@ -96,6 +112,11 @@ namespace Benkei
                 ContextMenuStrip = _trayMenu
             };
             _notifyIcon.DoubleClick += OnTrayShowClick;
+        }
+
+        private void OnToggleConversionClick(object sender, EventArgs e)
+        {
+            ToggleConversion();
         }
 
         private void OnTrayShowClick(object sender, EventArgs e)
@@ -147,6 +168,40 @@ namespace Benkei
             if (WindowState == FormWindowState.Minimized && !_isExiting)
             {
                 HideToTray();
+            }
+        }
+
+        private void ToggleConversion()
+        {
+            if (_interceptor == null)
+            {
+                return;
+            }
+
+            _conversionEnabled = !_conversionEnabled;
+            _interceptor.SetConversionEnabled(_conversionEnabled);
+            UpdateConversionUiState();
+        }
+
+        private void UpdateConversionUiState()
+        {
+            var target = string.IsNullOrWhiteSpace(_configPath)
+                ? "Naginata.yaml を読み込みます"
+                : _configPath;
+
+            statusLabel.Text = _conversionEnabled
+                ? $"動作中: {target}"
+                : $"停止中: {target}";
+
+            if (_toggleConversionMenuItem != null)
+            {
+                _toggleConversionMenuItem.Checked = _conversionEnabled;
+                _toggleConversionMenuItem.Text = "薙刀式かな入力";
+            }
+
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Text = _conversionEnabled ? "Benkei (変換ON)" : "Benkei (変換OFF)";
             }
         }
     }

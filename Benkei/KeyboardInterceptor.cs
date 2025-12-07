@@ -15,6 +15,7 @@ namespace Benkei
         private IntPtr _hookHandle = IntPtr.Zero;
         private bool _allowRepeat;
         private bool _isRepeating;
+        private volatile bool _conversionEnabled = true;
         private int hjbuf = -1; // HJ同時押しバッファ
 
         const int IMC_SETCONVERSIONMODE = 2;
@@ -77,6 +78,24 @@ namespace Benkei
             Stop();
         }
 
+        public void SetConversionEnabled(bool enabled)
+        {
+            var previous = _conversionEnabled;
+            _conversionEnabled = enabled;
+
+            if (!enabled)
+            {
+                Console.WriteLine("[Interceptor] 入力変換 OFF");
+                ResetStateInternal();
+            }
+            else if (!previous && enabled)
+            {
+                Console.WriteLine("[Interceptor] 入力変換 ON");
+            }
+        }
+
+        public bool GetConversionEnabled() => _conversionEnabled;
+
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode < 0)
@@ -100,6 +119,11 @@ namespace Benkei
 
                 // Skip events sent by ourselves
                 if (hookData.dwExtraInfo == BenkeiMarker)
+                {
+                    return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                }
+
+                if (!_conversionEnabled)
                 {
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
@@ -292,6 +316,7 @@ namespace Benkei
             _isRepeating = false;
             _allowRepeat = false;
             _executor.ReleaseLatchedKeys();
+            hjbuf = -1;
         }
 
         private bool IsJapaneseInputActive()
