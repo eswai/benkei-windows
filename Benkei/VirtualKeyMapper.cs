@@ -74,7 +74,7 @@ namespace Benkei
             ["Comma"] = (int)Keys.Oemcomma,
             ["Period"] = (int)Keys.OemPeriod,
             ["Slash"] = (int)Keys.OemQuestion,
-            ["Semicolon"] = (int)Keys.OemSemicolon,
+            ["Semicolon"] = (int)Keys.Oemplus,
             ["Quote"] = (int)Keys.OemQuotes,
             ["Minus"] = (int)Keys.OemMinus,
             ["Equal"] = (int)Keys.Oemplus,
