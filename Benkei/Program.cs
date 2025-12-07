@@ -1,36 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace Benkei
 {
     internal static class Program
     {
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool AllocConsole();
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool AttachConsole(int dwProcessId);
-
-        private const int AttachParentProcess = -1;
-
         /// <summary>
         /// アプリケーションのメイン エントリ ポイントです。
         /// </summary>
         [STAThread]
         static void Main()
         {
-            // コンソールウィンドウを割り当て
-            if (!AttachConsole(AttachParentProcess))
-            {
-                AllocConsole();
-            }
-
-            Console.WriteLine("[Benkei] アプリケーション起動");
-            Console.WriteLine($"[Benkei] 起動時刻: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            Debug.WriteLine("[Benkei] アプリケーション起動");
+            Debug.WriteLine($"[Benkei] 起動時刻: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             Application.ThreadException += (sender, args) =>
             {
@@ -54,7 +37,7 @@ namespace Benkei
                 throw;
             }
 
-            Console.WriteLine("[Benkei] アプリケーション終了");
+            Debug.WriteLine("[Benkei] アプリケーション終了");
         }
 
         private static void LogException(string source, Exception ex)
@@ -63,7 +46,7 @@ namespace Benkei
             {
                 if (ex == null)
                 {
-                    Console.WriteLine($"[Benkei] {source}: (null exception)");
+                    Debug.WriteLine($"[Benkei] {source}: (null exception)");
                     return;
                 }
 
@@ -72,16 +55,16 @@ namespace Benkei
                 while (current != null)
                 {
                     var prefix = level == 0 ? source : $"{source}/Inner({level})";
-                    Console.WriteLine($"[Benkei] 例外({prefix}): {current.GetType().FullName}");
-                    Console.WriteLine($"[Benkei] メッセージ: {current.Message}");
-                    Console.WriteLine($"[Benkei] スタックトレース: {current.StackTrace}");
+                    Debug.WriteLine($"[Benkei] 例外({prefix}): {current.GetType().FullName}");
+                    Debug.WriteLine($"[Benkei] メッセージ: {current.Message}");
+                    Debug.WriteLine($"[Benkei] スタックトレース: {current.StackTrace}");
                     current = current.InnerException;
                     level++;
                 }
             }
             catch (Exception logEx)
             {
-                Console.WriteLine($"[Benkei] 例外ログ出力に失敗 ({source}): {logEx.GetType().FullName} {logEx.Message}");
+                Debug.WriteLine($"[Benkei] 例外ログ出力に失敗 ({source}): {logEx.GetType().FullName} {logEx.Message}");
             }
         }
     }
