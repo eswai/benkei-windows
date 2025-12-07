@@ -232,12 +232,13 @@ namespace Benkei
                 return 0;
             }
 
-            var keySet = new HashSet<int>(keys);
+            var normalizedKeys = NormalizeKeys(keys);
+            var keySet = new HashSet<int>(normalizedKeys);
             var matches = 0;
 
             foreach (var rule in _rules)
             {
-                switch (keys.Count)
+                switch (normalizedKeys.Count)
                 {
                     case 1:
                         if (rule.Mae.SetEquals(keySet))
@@ -257,7 +258,7 @@ namespace Benkei
                             matches++;
                         }
 
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 1)) && rule.Douji.SetEquals(SliceSet(keys, 1)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 1)))
                         {
                             matches++;
                         }
@@ -269,12 +270,12 @@ namespace Benkei
 
                         break;
                     default:
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 2)) && rule.Douji.SetEquals(SliceSet(keys, 2)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 2)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 2)))
                         {
                             matches++;
                         }
 
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 1)) && rule.Douji.SetEquals(SliceSet(keys, 1)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 1)))
                         {
                             matches++;
                         }
@@ -298,12 +299,13 @@ namespace Benkei
                 return 0;
             }
 
-            var keySet = new HashSet<int>(keys);
+            var normalizedKeys = NormalizeKeys(keys);
+            var keySet = new HashSet<int>(normalizedKeys);
             var candidates = 0;
 
             foreach (var rule in _rules)
             {
-                switch (keys.Count)
+                switch (normalizedKeys.Count)
                 {
                     case 1:
                         if (rule.Mae.IsSupersetOf(keySet))
@@ -323,7 +325,7 @@ namespace Benkei
                             candidates++;
                         }
 
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(keys, 1)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 1)))
                         {
                             candidates++;
                         }
@@ -335,12 +337,12 @@ namespace Benkei
 
                         break;
                     default:
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 2)) && rule.Douji.IsSupersetOf(SliceSet(keys, 2)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 2)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 2)))
                         {
                             candidates++;
                         }
 
-                        if (rule.Mae.SetEquals(SliceSet(keys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(keys, 1)))
+                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 1)))
                         {
                             candidates++;
                         }
@@ -355,6 +357,16 @@ namespace Benkei
             }
 
             return candidates;
+        }
+
+        private static IList<int> NormalizeKeys(IList<int> keys)
+        {
+            if (keys == null)
+            {
+                return new List<int>();
+            }
+
+            return keys.Select(k => k == VirtualKeyMapper.Return ? VirtualKeyMapper.Space : k).ToList();
         }
 
         private static HashSet<int> SliceSet(IList<int> source, int startIndex, int length)
