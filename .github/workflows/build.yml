@@ -24,4 +24,14 @@ jobs:
         run: nuget restore Benkei/Benkei.csproj
 
       - name: Build
-        run: msbuild Benkei/Benkei.csproj /p:Configuration=Release /p:Platform="Any CPU" /t:Rebuild
+        run: msbuild Benkei/Benkei.csproj /p:Configuration=Release /p:Platform=AnyCPU /t:Rebuild
+
+      - name: Package artifacts
+        shell: pwsh
+        run: Compress-Archive -Path "Benkei/bin/Release/*" -DestinationPath Benkei_Release.zip -CompressionLevel Optimal
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Benkei-Release
+          path: Benkei_Release.zip
