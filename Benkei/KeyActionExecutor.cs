@@ -130,11 +130,10 @@ namespace Benkei
 
             // 薙刀式リセット
             // 未変換文字の確定
-            TapKey((ushort)Keys.D0);
-            TapKey((ushort)Keys.Return);
-            System.Threading.Thread.Sleep(10);
-            TapKey((ushort)Keys.Back);
-
+            if (ImeUtility.TryHasUnconvertedText())
+            {
+                TapKey((ushort)Keys.Return);
+            }
             ImeUtility.TryTurnOff();
             foreach (var ch in value)
             {
