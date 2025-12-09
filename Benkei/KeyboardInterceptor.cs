@@ -18,13 +18,6 @@ namespace Benkei
         private volatile bool _conversionEnabled = true;
         private int hjbuf = -1; // HJ同時押しバッファ
 
-        const int IMC_SETCONVERSIONMODE = 2;
-        const int IME_CMODE_NATIVE    =  1;
-        const int IME_CMODE_KATAKANA  =  2;
-        const int IME_CMODE_FULLSHAPE =  8;
-        const int IME_CMODE_ROMAN     = 16;
-        const int CMode_Hiragana    = IME_CMODE_ROMAN | IME_CMODE_FULLSHAPE | IME_CMODE_NATIVE;
-
         public KeyboardInterceptor(NaginataEngine engine)
         {
             _engine = engine ?? throw new ArgumentNullException(nameof(engine));
@@ -278,28 +271,20 @@ namespace Benkei
             return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
         }
 
-        private void IMEON() 
+        private void IMEON()
         {
-            var foreground = GetForegroundWindow();
-            var defaultContext = ImmGetDefaultIMEWnd(foreground);
-            if (defaultContext != IntPtr.Zero)
+            if (!ImeUtility.TryTurnOnHiragana())
             {
-                const int ImcSetopenstatus = 0x0006;
-                SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(1));
-                SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)CMode_Hiragana);
+                Console.WriteLine("[Interceptor] IME ON 失敗");
             }
             _engine.Reset();
         }
 
-        private void IMEOFF() 
+        private void IMEOFF()
         {
-            var foreground = GetForegroundWindow();
-            var defaultContext = ImmGetDefaultIMEWnd(foreground);
-            if (defaultContext != IntPtr.Zero)
+            if (!ImeUtility.TryTurnOff())
             {
-                const int ImcSetopenstatus = 0x0006;
-                SendMessage(defaultContext, WmImeControl, new IntPtr(ImcSetopenstatus), new IntPtr(0));
-                // SendMessage(defaultContext, WmImeControl, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)IME_CMODE_NATIVE);
+                Console.WriteLine("[Interceptor] IME OFF 失敗");
             }
             _engine.Reset();
         }

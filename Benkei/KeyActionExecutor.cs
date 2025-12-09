@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Benkei
 {
@@ -127,11 +128,21 @@ namespace Benkei
                 return;
             }
 
+            // 薙刀式リセット
+            // 未変換文字の確定
+            TapKey((ushort)Keys.D0);
+            TapKey((ushort)Keys.Return);
+            System.Threading.Thread.Sleep(10);
+            TapKey((ushort)Keys.Back);
+
+            ImeUtility.TryTurnOff();
             foreach (var ch in value)
             {
                 SendUnicode((ushort)ch, false);
                 SendUnicode((ushort)ch, true);
+                System.Threading.Thread.Sleep(10);
             }
+            ImeUtility.TryTurnOnHiragana();
         }
 
         private static void SendKey(ushort keyCode, bool keyUp)

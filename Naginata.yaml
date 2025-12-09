@@ -944,7 +944,6 @@
   type:
   # ／{改行}
     - character: ／
-    - tap: Return
 # - mae: [J, K]
 #   douji: [E]
 - mae: [J, K]
@@ -958,67 +957,57 @@
   douji: [T]
   type:
   # ・(未確定)
-    - character: ・
+    - tap: Slash
 - mae: [J, K]
   douji: [A]
   type:
   # ……{改行}
     - character: ……
-    - tap: Return
 - mae: [J, K]
   douji: [S]
   type:
   # 『{改行}
     - character: 『
-    - tap: Return
 - mae: [J, K]
   douji: [D]
   type:
   # ？{改行}
     - character: ？
-    - tap: Return
 - mae: [J, K]
   douji: [F]
   type:
   # 「{改行}
     - character: 「
-    - tap: Return
 - mae: [J, K]
   douji: [G]
   type:
   #  ({改行}
     - character: （
-    - tap: Return
 - mae: [J, K]
   douji: [Z]
   type:
   # ――{改行}
     - character: ――
-    - tap: Return
 - mae: [J, K]
   douji: [X]
   type:
   # 』{改行}
     - character: 』
-    - tap: Return
 - mae: [J, K]
   douji: [C]
   type:
   # ！{改行}
     - character: ！
-    - tap: Return
 - mae: [J, K]
   douji: [V]
   type:
   # 」{改行}
     - character: 」
-    - tap: Return
 - mae: [J, K]
   douji: [B]
   type:
   # ){改行}
     - character: ）
-    - tap: Return
 - mae: [D, F]
   douji: [Y]
   type:
@@ -1141,7 +1130,6 @@
   type:
     - character: 　　　×　　　×　　　×
     - tap: Return
-    - tap: Return
 - mae: [M, Comma]
   douji: [E]
   #{Home}{→}{End}{Del 2}{←} セリフ接ぎ
@@ -1165,19 +1153,16 @@
   type:
   # 〇{改行}
     - character: 〇
-    - tap: Return
 - mae: [M, Comma]
   douji: [A]
   type:
   # 《{改行} 
     - character: 《
-    - tap: Return
 - mae: [M, Comma]
   douji: [S]
   type:
   # 【{改行}
     - character: 【
-    - tap: Return
 - mae: [M, Comma]
   douji: [D]
   type:
@@ -1212,19 +1197,16 @@
   type:
   # 》{改行}
     - character: 》
-    - tap: Return
 - mae: [M, Comma]
   douji: [X]
   type:
   # 】{改行}
     - character: 】
-    - tap: Return
 - mae: [M, Comma]
   douji: [C]
   type:
   # 」{改行}{改行}
     - character: 」
-    - tap: Return
     - tap: Return
 - mae: [M, Comma]
   douji: [V]
@@ -1232,9 +1214,7 @@
   # 」{改行}{改行}「{改行} 
     - character: 」
     - tap: Return
-    - tap: Return
     - character: 「
-    - tap: Return
 - mae: [M, Comma]
   douji: [B]
   type:
@@ -1363,3 +1343,124 @@
     - tap: RightArrow
     - tap: RightArrow
     - release: Shift
+# ---------------------------------------- 固有名詞モード
+- mae: [U, I]
+  douji: [Q]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [W]
+  type:
+  - character: 天空のファルコーン
+- mae: [U, I]
+  douji: [E]
+  type:
+  - character: 天ファル
+- mae: [U, I]
+  douji: [R]
+  type:
+  - character: 神山
+- mae: [U, I]
+  douji: [T]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [A]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [S]
+  type:
+  - character: ミツルギ
+- mae: [U, I]
+  douji: [D]
+  type:
+  - character: 韮澤
+- mae: [U, I]
+  douji: [F]
+  type:
+  - character: 上山
+- mae: [U, I]
+  douji: [G]
+  type:
+  - character: チャンプ
+- mae: [U, I]
+  douji: [Z]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [X]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [C]
+  type:
+  - character: 戸田
+- mae: [U, I]
+  douji: [V]
+  type:
+  - character:
+- mae: [U, I]
+  douji: [B]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [Y]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [U]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [I]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [O]
+  type:
+  - character: えりりん
+- mae: [E, R]
+  douji: [P]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [H]
+  type:
+  - character: 山根
+- mae: [E, R]
+  douji: [J]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [K]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [L]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [Semicolon]
+  type:
+  - character: 深町
+- mae: [E, R]
+  douji: [N]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [M]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [Comma]
+  type:
+  - character:
+- mae: [E, R]
+  douji: [Period]
+  type:
+  - character: 渡辺
+- mae: [E, R]
+  douji: [Slash]
+  type:
+  - character:
