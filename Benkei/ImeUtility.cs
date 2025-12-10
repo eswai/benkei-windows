@@ -20,7 +20,7 @@ namespace Benkei
 
         public static bool IsJapaneseInputActive()
         {
-            return IsJapaneseInputActive1() || IsJapaneseInputActive1u2();
+            return IsJapaneseInputActive1() || IsJapaneseInputActive2();
         }
 
         public static bool IsJapaneseInputActive1()
@@ -63,7 +63,7 @@ namespace Benkei
             return isNativeMode;
         }
 
-        public static bool IsJapaneseInputActive1u2()
+        public static bool IsJapaneseInputActive2()
         {
             var foreground = GetForegroundWindow();
             if (foreground == IntPtr.Zero)
