@@ -174,6 +174,7 @@ namespace Benkei
             {
                 Debug.WriteLine($"[SendKey] SUCCESS! Sent {result} event(s)");
             }
+            System.Threading.Thread.Sleep(10);
         }
 
         private static void SendUnicode(ushort rune, bool keyUp)
