@@ -16,7 +16,7 @@ namespace Benkei
         private bool _allowRepeat;
         private bool _isRepeating;
         private volatile bool _conversionEnabled = true;
-        private int hjbuf = -1; // HJ同時押しバッファ
+        private int hjbuf = -1; // HJ,FG同時押しバッファ
 
         public KeyboardInterceptor(NaginataEngine engine)
         {
@@ -122,47 +122,14 @@ namespace Benkei
                 }
 
                 if (!ImeUtility.IsJapaneseInputActive()) {
-                // IsJapaneseInputActive == falseのとき
-                // HとJを同時に押すと、IMEをONにする
-                // kana_on同時押しの処理（マッピング後のキーコードで判定）
-                // if type == .keyDown {
-                //     if hjbuf == -1 {
-                //         if kanaOnKeys.count >= 2 && (targetKeyCode == kanaOnKeys[0] || targetKeyCode == kanaOnKeys[1]) {
-                //             hjbuf = originalKeyCode; // 元のキーコードを保存
-                //             return nil;
-                //         } else {
-                //             // マッピングされたキーを送信
-                //             postKeyEvent(keyCode: targetKeyCode, keyDown: true)
-                //             return nil
-                //         }
                     if (isKeyDown) {
                         if (hjbuf == -1)
                         {
-                            if (keyCode == (int)Keys.H || keyCode == (int)Keys.J)
+                            if (keyCode == (int)Keys.H || keyCode == (int)Keys.J || keyCode == (int)Keys.F || keyCode == (int)Keys.G)
                             {
                                 hjbuf = keyCode; // 元のキーコードを保存
                                 return (IntPtr)1;
-                            } else {
-                                _executor.PressKey((ushort)hjbuf);
-                                return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                             }
-                //     } else {
-                //         let hjbufMapped = abcMapping[hjbuf] ?? hjbuf
-                //         if hjbufMapped + targetKeyCode == kanaOnKeys[0] + kanaOnKeys[1] {
-                //             sendJISKanaKey()
-                //             hjbuf = -1
-                //             return nil
-                //         } else {
-                //             // バッファのキーとマッピングされたキーを両方送信
-                //             let hjbufTargetKeyCode = abcMapping[hjbuf] ?? hjbuf
-                //             postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: true)
-                //             postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: false)
-                //             postKeyEvent(keyCode: targetKeyCode, keyDown: true)
-                //             pressedKeys.remove(hjbuf)
-                //             hjbuf = -1
-                //             return nil
-                //         }
-                //     }
                         }
                         else
                         {
@@ -170,6 +137,11 @@ namespace Benkei
                             {
                                 Console.WriteLine("[Interceptor] IME ON トグル");
                                 IMEON();
+                                hjbuf = -1;
+                                return (IntPtr)1;
+                            } else if (hjbuf + keyCode == (int)Keys.F + (int)Keys.G) {
+                                Console.WriteLine("[Interceptor] IME OFF トグル");
+                                IMEOFF();
                                 hjbuf = -1;
                                 return (IntPtr)1;
                             } else {
@@ -180,20 +152,6 @@ namespace Benkei
                                 return (IntPtr)1;
                             }
                         }
-                // } else if type == .keyUp {
-                //     if hjbuf > -1 && hjbuf == originalKeyCode {
-                //         let hjbufTargetKeyCode = abcMapping[hjbuf] ?? hjbuf
-                //         postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: true)
-                //         postKeyEvent(keyCode: hjbufTargetKeyCode, keyDown: false)
-                //         pressedKeys.remove(hjbuf)
-                //         hjbuf = -1
-                //         return nil
-                //     } else {
-                //         // マッピングされたキーのキーアップを送信
-                //         postKeyEvent(keyCode: targetKeyCode, keyDown: false)
-                //         return nil
-                //     }
-                // }
                     }
                     else
                     {
@@ -206,7 +164,6 @@ namespace Benkei
                         }
                         else
                         {
-                            // マッピングされたキーのキーアップを送信
                             _executor.ReleaseKey((ushort)keyCode);
                             return (IntPtr)1;
                         }
