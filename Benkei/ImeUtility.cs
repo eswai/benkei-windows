@@ -7,7 +7,9 @@ namespace Benkei
     {
         private const int WmImeControl = 0x0283;
         private const int ImcSetopenstatus = 0x0006;
+        private const int ImcGetopenstatus = 0x0005;
         private const int IMC_SETCONVERSIONMODE = 0x0002;
+        private const int ImmGetconversionmode = 0x0001;
         private const int ImeCmodeNative = 0x0001;
         private const int ImeCmodeKatakana = 0x0002;
         private const int ImeCmodeFullshape = 0x0008;
@@ -15,6 +17,100 @@ namespace Benkei
         private const int CModeHiragana = ImeCmodeNative | ImeCmodeFullshape | ImeCmodeRoman;
         private const int CModeKatakana = ImeCmodeNative | ImeCmodeFullshape | ImeCmodeKatakana;
         private const int GcsCompstr = 0x0008;
+
+        public static bool IsJapaneseInputActive()
+        {
+            return IsJapaneseInputActive1() || IsJapaneseInputActive1u2();
+        }
+
+        public static bool IsJapaneseInputActive1()
+        {
+            if (!TryGetFocusedWindow(out var foreground))
+            {
+                Console.WriteLine("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
+                return false;
+            }
+
+            var threadId = GetWindowThreadProcessId(foreground, out _);
+            var layout = GetKeyboardLayout(threadId);
+            var languageId = layout.ToInt64() & 0xFFFF;
+            if (languageId != 0x0411)
+            {
+                Console.WriteLine("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
+                return false;
+            }
+
+            if (!TryGetDefaultContext(out var defaultContext))
+            {
+                Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                return false;
+            }
+
+            var result = SendMessage(defaultContext, WmImeControl, (IntPtr)ImcGetopenstatus, IntPtr.Zero);
+            var isOpen = result.ToInt32() != 0;
+
+            if (!isOpen)
+            {
+                Console.WriteLine("[Interceptor] IME==オフ");
+                return false;
+            }
+
+            var conversionResult = SendMessage(defaultContext, WmImeControl, (IntPtr)ImmGetconversionmode, IntPtr.Zero);
+            var conversion = conversionResult.ToInt32();
+
+            var isNativeMode = (conversion & ImeCmodeNative) != 0;
+            Console.WriteLine($"[Interceptor] IME変換モード: 0x{conversion:X}, ネイティブ: {isNativeMode}");
+            return isNativeMode;
+        }
+
+        public static bool IsJapaneseInputActive1u2()
+        {
+            var foreground = GetForegroundWindow();
+            if (foreground == IntPtr.Zero)
+            {
+                Console.WriteLine("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
+                return false;
+            }
+
+            var threadId = GetWindowThreadProcessId(foreground, out _);
+            var layout = GetKeyboardLayout(threadId);
+            var languageId = layout.ToInt64() & 0xFFFF;
+            if (languageId != 0x0411)
+            {
+                Console.WriteLine("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
+                return false;
+            }
+
+            var context = ImmGetContext(foreground);
+            if (context == IntPtr.Zero)
+            {
+                Console.WriteLine("[Interceptor] IMEコンテキストの取得に失敗");
+                return false;
+            }
+
+            try
+            {
+                if (!ImmGetOpenStatus(context))
+                {
+                    Console.WriteLine("[Interceptor] IMEがオープンではありません");
+                    return false;
+                }
+
+                const int ImeCmodeNative = 0x0001;
+                if (ImmGetConversionStatus(context, out var conversion, out _))
+                {
+                    Console.WriteLine("[Interceptor] IMEの変換モードを確認");
+                    return (conversion & ImeCmodeNative) != 0;
+                }
+
+                Console.WriteLine("[Interceptor] 日本語入力モード");
+                return true;
+            }
+            finally
+            {
+                ImmReleaseContext(foreground, context);
+            }
+        }
 
         public static bool TryTurnOnHiragana()
         {
@@ -153,6 +249,9 @@ namespace Benkei
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll")]
+        private static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport("user32.dll")]
         private static extern bool GetGUIThreadInfo(uint idThread, ref GuiThreadInfo lpgui);
 
         [DllImport("imm32.dll")]
@@ -169,5 +268,11 @@ namespace Benkei
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("imm32.dll")]
+        private static extern bool ImmGetOpenStatus(IntPtr hIMC);
+
+        [DllImport("imm32.dll")]
+        private static extern bool ImmGetConversionStatus(IntPtr hIMC, out int conversion, out int sentence);
     }
 }
