@@ -10,6 +10,7 @@ namespace Benkei
     {
         private readonly NaginataEngine _engine;
         private readonly KeyActionExecutor _executor;
+        private readonly AlphabetConfig _alphabetConfig;
         private readonly HashSet<int> _pressedPhysicalKeys = new HashSet<int>();
         private readonly LowLevelKeyboardProc _callback;
         private IntPtr _hookHandle = IntPtr.Zero;
@@ -18,9 +19,10 @@ namespace Benkei
         private volatile bool _conversionEnabled = true;
         private int hjbuf = -1; // HJ,FG同時押しバッファ
 
-        public KeyboardInterceptor(NaginataEngine engine)
+        public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig)
         {
             _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            _alphabetConfig = alphabetConfig ?? throw new ArgumentNullException(nameof(alphabetConfig));
             _callback = HookCallback;
             _executor = new KeyActionExecutor(SetRepeatAllowed, ResetStateInternal);
         }
@@ -121,56 +123,14 @@ namespace Benkei
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
-                if (!ImeUtility.IsJapaneseInputActive()) {
-                    if (isKeyDown) {
-                        if (hjbuf == -1)
-                        {
-                            if (keyCode == (int)Keys.H || keyCode == (int)Keys.J || keyCode == (int)Keys.F || keyCode == (int)Keys.G)
-                            {
-                                hjbuf = keyCode; // 元のキーコードを保存
-                                return (IntPtr)1;
-                            }
-                        }
-                        else
-                        {
-                            if (hjbuf + keyCode == (int)Keys.H + (int)Keys.J)
-                            {
-                                Console.WriteLine("[Interceptor] IME ON トグル");
-                                IMEON();
-                                hjbuf = -1;
-                                return (IntPtr)1;
-                            } else if (hjbuf + keyCode == (int)Keys.F + (int)Keys.G) {
-                                Console.WriteLine("[Interceptor] IME OFF トグル");
-                                IMEOFF();
-                                hjbuf = -1;
-                                return (IntPtr)1;
-                            } else {
-                                _executor.TapKey((ushort)hjbuf);
-                                _executor.PressKey((ushort)keyCode);
-                                _pressedPhysicalKeys.Remove(hjbuf);
-                                hjbuf = -1;
-                                return (IntPtr)1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (hjbuf > -1 && hjbuf == keyCode)
-                        {
-                            _executor.TapKey((ushort)hjbuf);
-                            _pressedPhysicalKeys.Remove(hjbuf);
-                            hjbuf = -1;
-                            return (IntPtr)1;
-                        }
-                        else
-                        {
-                            _executor.ReleaseKey((ushort)keyCode);
-                            return (IntPtr)1;
-                        }
-                    }
+                var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
+
+                if (!isJapaneseInputActive && TryHandleImeOffKey(keyCode, isKeyDown, isKeyUp))
+                {
+                    return (IntPtr)1;
                 }
 
-                if (!_engine.IsNaginataKey(keyCode) || !ImeUtility.IsJapaneseInputActive())
+                if (!_engine.IsNaginataKey(keyCode) || !isJapaneseInputActive)
                 {
                     if (isKeyUp)
                     {
@@ -226,6 +186,122 @@ namespace Benkei
             }
 
             return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+        }
+
+        private bool TryHandleImeOffKey(int keyCode, bool isKeyDown, bool isKeyUp)
+        {
+            if (isKeyDown)
+            {
+                if (hjbuf == -1 && IsImeToggleCandidate(keyCode))
+                {
+                    hjbuf = keyCode;
+                    return true;
+                }
+
+                if (hjbuf > -1)
+                {
+                    if (IsImeToggleCandidate(keyCode))
+                    {
+                        if (IsImeOnCombo(hjbuf, keyCode))
+                        {
+                            Console.WriteLine("[Interceptor] IME ON トグル");
+                            IMEON();
+                            hjbuf = -1;
+                            return true;
+                        }
+
+                        if (IsImeOffCombo(hjbuf, keyCode))
+                        {
+                            Console.WriteLine("[Interceptor] IME OFF トグル");
+                            IMEOFF();
+                            hjbuf = -1;
+                            return true;
+                        }
+
+                        SendRemappedTap(hjbuf);
+                        SendRemappedTap(keyCode);
+                        hjbuf = -1;
+                        return true;
+                    }
+
+                    SendRemappedTap(hjbuf);
+                    hjbuf = -1;
+                }
+            }
+            else if (isKeyUp)
+            {
+                if (hjbuf > -1)
+                {
+                    if (hjbuf == keyCode)
+                    {
+                        SendRemappedTap(hjbuf);
+                        hjbuf = -1;
+                        return true;
+                    }
+
+                    hjbuf = -1;
+                }
+            }
+
+            return TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp);
+        }
+
+        private bool TryHandleAlphabetRemap(int keyCode, bool isKeyDown, bool isKeyUp)
+        {
+            if (_alphabetConfig == null)
+            {
+                return false;
+            }
+
+            var hasMapping = _alphabetConfig.TryGetRemappedKey(keyCode, out _);
+            if (!hasMapping)
+            {
+                return false;
+            }
+
+            if (isKeyDown)
+            {
+                SendRemappedTap(keyCode);
+                return true;
+            }
+
+            if (isKeyUp)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void SendRemappedTap(int keyCode)
+        {
+            var targetKey = ResolveRemappedKey(keyCode);
+            _executor.TapKey((ushort)targetKey);
+        }
+
+        private int ResolveRemappedKey(int keyCode)
+        {
+            if (_alphabetConfig != null && _alphabetConfig.TryGetRemappedKey(keyCode, out var mapped))
+            {
+                return mapped;
+            }
+
+            return keyCode;
+        }
+
+        private static bool IsImeToggleCandidate(int keyCode)
+        {
+            return keyCode == (int)Keys.H || keyCode == (int)Keys.J || keyCode == (int)Keys.F || keyCode == (int)Keys.G;
+        }
+
+        private static bool IsImeOnCombo(int first, int second)
+        {
+            return (first == (int)Keys.H && second == (int)Keys.J) || (first == (int)Keys.J && second == (int)Keys.H);
+        }
+
+        private static bool IsImeOffCombo(int first, int second)
+        {
+            return (first == (int)Keys.F && second == (int)Keys.G) || (first == (int)Keys.G && second == (int)Keys.F);
         }
 
         private void IMEON()

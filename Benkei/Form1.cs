@@ -32,11 +32,15 @@ namespace Benkei
                 var configPath = ResolveConfigPath();
                 _configPath = configPath;
                 Console.WriteLine($"[Benkei] 設定ファイル: {configPath}");
+                var alphabetConfigPath = ResolveAlphabetConfigPath();
+                Console.WriteLine($"[Benkei] アルファベット設定: {alphabetConfigPath}");
+                var alphabetLoader = new AlphabetConfigLoader();
+                var alphabetConfig = alphabetLoader.Load(alphabetConfigPath);
                 var loader = new NaginataConfigLoader();
                 var rules = loader.Load(configPath);
                 Console.WriteLine($"[Benkei] ルール読み込み完了: {rules.Count}件");
                 var engine = new NaginataEngine(rules);
-                _interceptor = new KeyboardInterceptor(engine);
+                _interceptor = new KeyboardInterceptor(engine, alphabetConfig);
                 _interceptor.Start();
                 _interceptor.SetConversionEnabled(_conversionEnabled);
                 Console.WriteLine("[Benkei] キーボードフック開始");
@@ -86,6 +90,18 @@ namespace Benkei
             }
 
             throw new FileNotFoundException("Naginata.yaml が見つかりません。", candidate);
+        }
+
+        private static string ResolveAlphabetConfigPath()
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var candidate = Path.Combine(baseDir, "alphabet.yaml");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            throw new FileNotFoundException("alphabet.yaml が見つかりません。", candidate);
         }
 
         private void InitializeTrayComponents()

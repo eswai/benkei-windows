@@ -69,6 +69,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="AlphabetConfigLoader.cs" />
     <Compile Include="ImeUtility.cs" />
     <Compile Include="KeyboardInterceptor.cs" />
     <Compile Include="KeyActionExecutor.cs" />
@@ -121,6 +122,10 @@
   <ItemGroup>
     <Content Include="..\Naginata.yaml">
       <Link>Naginata.yaml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\alphabet.yaml">
+      <Link>alphabet.yaml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
