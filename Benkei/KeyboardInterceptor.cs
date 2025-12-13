@@ -230,16 +230,11 @@ namespace Benkei
             }
             else if (isKeyUp)
             {
-                if (hjbuf > -1)
+                if (hjbuf > -1 && hjbuf == keyCode)
                 {
-                    if (hjbuf == keyCode)
-                    {
-                        SendRemappedTap(hjbuf);
-                        hjbuf = -1;
-                        return true;
-                    }
-
+                    SendRemappedTap(hjbuf);
                     hjbuf = -1;
+                    return true;
                 }
             }
 
