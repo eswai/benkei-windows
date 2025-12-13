@@ -18,6 +18,9 @@ namespace Benkei
         private bool _isRepeating;
         private volatile bool _conversionEnabled = true;
         private int hjbuf = -1; // HJ,FG同時押しバッファ
+        private bool _ctrlPressed;
+        private bool _shiftPressed;
+        private bool _altPressed;
 
         public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig)
         {
@@ -112,6 +115,11 @@ namespace Benkei
                 var hookData = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
                 var keyCode = hookData.vkCode;
 
+                if (TryUpdateModifierState(keyCode, isKeyDown, isKeyUp))
+                {
+                    return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                }
+
                 // Skip events sent by ourselves
                 if (hookData.dwExtraInfo == BenkeiMarker)
                 {
@@ -124,6 +132,11 @@ namespace Benkei
                 }
 
                 var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
+
+                if (isJapaneseInputActive && (_ctrlPressed || _shiftPressed || _altPressed) && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
+                {
+                    return (IntPtr)1;
+                }
 
                 if (!isJapaneseInputActive && TryHandleImeOffKey(keyCode, isKeyDown, isKeyUp))
                 {
@@ -330,6 +343,63 @@ namespace Benkei
             _allowRepeat = false;
             _executor.ReleaseLatchedKeys();
             hjbuf = -1;
+            _ctrlPressed = false;
+            _shiftPressed = false;
+            _altPressed = false;
+        }
+
+        private static bool IsControlKey(int keyCode)
+        {
+            return keyCode == (int)Keys.ControlKey || keyCode == (int)Keys.RControlKey || keyCode == (int)Keys.LControlKey;
+        }
+
+        private static bool IsShiftKey(int keyCode)
+        {
+            return keyCode == (int)Keys.ShiftKey || keyCode == (int)Keys.RShiftKey || keyCode == (int)Keys.LShiftKey;
+        }
+
+        private static bool IsAltKey(int keyCode)
+        {
+            return keyCode == (int)Keys.Menu || keyCode == (int)Keys.RMenu;
+        }
+
+        private bool TryUpdateModifierState(int keyCode, bool isKeyDown, bool isKeyUp)
+        {
+            if (IsControlKey(keyCode))
+            {
+                _ctrlPressed = isKeyDown ? true : isKeyUp ? false : _ctrlPressed;
+                return true;
+            }
+
+            if (IsShiftKey(keyCode))
+            {
+                if (isKeyDown)
+                {
+                    _shiftPressed = true;
+                }
+                else if (isKeyUp)
+                {
+                    _shiftPressed = false;
+                    RestoreKanaModeIfNeeded();
+                }
+                return true;
+            }
+
+            if (IsAltKey(keyCode))
+            {
+                _altPressed = isKeyDown ? true : isKeyUp ? false : _altPressed;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void RestoreKanaModeIfNeeded()
+        {
+            if (_conversionEnabled)
+            {
+                ImeUtility.TryTurnOnHiragana();
+            }
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
