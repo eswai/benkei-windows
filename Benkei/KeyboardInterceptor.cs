@@ -21,6 +21,7 @@ namespace Benkei
         private bool _ctrlPressed;
         private bool _shiftPressed;
         private bool _altPressed;
+        private bool _windowsPressed;
 
         public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig)
         {
@@ -133,7 +134,7 @@ namespace Benkei
 
                 var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
 
-                if (isJapaneseInputActive && (_ctrlPressed || _shiftPressed || _altPressed) && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
+                if (isJapaneseInputActive && (_ctrlPressed || _shiftPressed || _altPressed || _windowsPressed ) && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
                 {
                     return (IntPtr)1;
                 }
@@ -363,6 +364,11 @@ namespace Benkei
             return keyCode == (int)Keys.Menu || keyCode == (int)Keys.RMenu;
         }
 
+        private static bool IsWindowsKey(int keyCode)
+        {
+            return keyCode == (int)Keys.RWin || keyCode == (int)Keys.LWin;
+        }
+
         private bool TryUpdateModifierState(int keyCode, bool isKeyDown, bool isKeyUp)
         {
             if (IsControlKey(keyCode))
@@ -373,21 +379,19 @@ namespace Benkei
 
             if (IsShiftKey(keyCode))
             {
-                if (isKeyDown)
-                {
-                    _shiftPressed = true;
-                }
-                else if (isKeyUp)
-                {
-                    _shiftPressed = false;
-                    RestoreKanaModeIfNeeded();
-                }
+                _shiftPressed = isKeyDown ? true : isKeyUp ? false : _shiftPressed;
                 return true;
             }
 
             if (IsAltKey(keyCode))
             {
                 _altPressed = isKeyDown ? true : isKeyUp ? false : _altPressed;
+                return true;
+            }
+
+            if (IsWindowsKey(keyCode))
+            {
+                _windowsPressed = isKeyDown ? true : isKeyUp ? false : _windowsPressed;
                 return true;
             }
 
