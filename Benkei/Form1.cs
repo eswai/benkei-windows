@@ -40,7 +40,7 @@ namespace Benkei
                 var rules = loader.Load(configPath);
                 Console.WriteLine($"[Benkei] ルール読み込み完了: {rules.Count}件");
                 var engine = new NaginataEngine(rules);
-                _interceptor = new KeyboardInterceptor(engine, alphabetConfig);
+                _interceptor = new KeyboardInterceptor(engine, alphabetConfig, OnConversionStateChanged);
                 _interceptor.Start();
                 _interceptor.SetConversionEnabled(_conversionEnabled);
                 Console.WriteLine("[Benkei] キーボードフック開始");
@@ -196,6 +196,17 @@ namespace Benkei
 
             _conversionEnabled = !_conversionEnabled;
             _interceptor.SetConversionEnabled(_conversionEnabled);
+        }
+
+        private void OnConversionStateChanged(bool enabled)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<bool>(OnConversionStateChanged), enabled);
+                return;
+            }
+
+            _conversionEnabled = enabled;
             UpdateConversionUiState();
         }
 

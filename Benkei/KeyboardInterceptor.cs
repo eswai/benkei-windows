@@ -11,6 +11,7 @@ namespace Benkei
         private readonly NaginataEngine _engine;
         private readonly KeyActionExecutor _executor;
         private readonly AlphabetConfig _alphabetConfig;
+        private readonly Action<bool> _conversionStateChanged;
         private readonly HashSet<int> _pressedPhysicalKeys = new HashSet<int>();
         private readonly LowLevelKeyboardProc _callback;
         private IntPtr _hookHandle = IntPtr.Zero;
@@ -23,10 +24,11 @@ namespace Benkei
         private bool _altPressed;
         private bool _windowsPressed;
 
-        public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig)
+        public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig, Action<bool> conversionStateChanged = null)
         {
             _engine = engine ?? throw new ArgumentNullException(nameof(engine));
             _alphabetConfig = alphabetConfig ?? throw new ArgumentNullException(nameof(alphabetConfig));
+            _conversionStateChanged = conversionStateChanged;
             _callback = HookCallback;
             _executor = new KeyActionExecutor(SetRepeatAllowed, ResetStateInternal);
         }
@@ -91,6 +93,8 @@ namespace Benkei
             {
                 Console.WriteLine("[Interceptor] 入力変換 ON");
             }
+
+            _conversionStateChanged?.Invoke(enabled);
         }
 
         public bool GetConversionEnabled() => _conversionEnabled;
@@ -125,6 +129,11 @@ namespace Benkei
                 if (hookData.dwExtraInfo == BenkeiMarker)
                 {
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                }
+
+                if (TryHandleConversionToggle(keyCode, isKeyDown))
+                {
+                    return (IntPtr)1;
                 }
 
                 if (!_conversionEnabled)
@@ -334,6 +343,33 @@ namespace Benkei
         private void SetRepeatAllowed(bool allowed)
         {
             _allowRepeat = allowed;
+        }
+
+        private bool TryHandleConversionToggle(int keyCode, bool isKeyDown)
+        {
+            if (!isKeyDown)
+            {
+                return false;
+            }
+
+            if (!_ctrlPressed || !_shiftPressed)
+            {
+                return false;
+            }
+
+            if (keyCode == (int)Keys.D0)
+            {
+                SetConversionEnabled(false);
+                return true;
+            }
+
+            if (keyCode == (int)Keys.D1)
+            {
+                SetConversionEnabled(true);
+                return true;
+            }
+
+            return false;
         }
 
         private void ResetStateInternal()
