@@ -112,7 +112,6 @@ namespace Benkei
             }
             else
             {
-                _pendingInput.Add(new List<int>());
                 if (_pendingInput.Count > 0 && NumberOfCandidates(_pendingInput[0]) == 1)
                 {
                     Console.WriteLine($"[Engine] 部分解放 - 確定処理");
