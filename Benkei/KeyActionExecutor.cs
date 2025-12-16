@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Benkei
@@ -12,12 +14,17 @@ namespace Benkei
         private readonly Action<bool> _setRepeatAllowed;
         private readonly Action _resetRequest;
         private readonly HashSet<ushort> _latchedKeys = new HashSet<ushort>();
+        private readonly ConcurrentQueue<(ushort keyCode, bool keyUp)> _keyQueue = new ConcurrentQueue<(ushort keyCode, bool keyUp)>();
+        private readonly System.Threading.Timer _keySendTimer;
+        private int _isProcessingQueue;
         private static readonly IntPtr BenkeiMarker = new IntPtr(0x42454E4B); // "BENK"
 
         public KeyActionExecutor(Action<bool> setRepeatAllowed, Action resetRequest)
         {
             _setRepeatAllowed = setRepeatAllowed ?? throw new ArgumentNullException(nameof(setRepeatAllowed));
             _resetRequest = resetRequest ?? throw new ArgumentNullException(nameof(resetRequest));
+
+            _keySendTimer = new System.Threading.Timer(_ => ProcessKeyQueue(), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
         }
 
         public void Execute(IEnumerable<NaginataAction> actions)
@@ -84,7 +91,7 @@ namespace Benkei
         {
             foreach (var key in _latchedKeys.ToArray())
             {
-                SendKey(key, true);
+                EnqueueKey(key, true);
                 _latchedKeys.Remove(key);
             }
         }
@@ -103,22 +110,22 @@ namespace Benkei
 
         public void TapKey(ushort key)
         {
-            SendKey(key, false);
-            SendKey(key, true);
+            EnqueueKey(key, false);
+            EnqueueKey(key, true);
         }
 
         public void PressKey(ushort key)
         {
             if (_latchedKeys.Add(key))
             {
-                SendKey(key, false);
+                EnqueueKey(key, false);
             }
         }
 
         public void ReleaseKey(ushort key)
         {
             _latchedKeys.Remove(key);
-            SendKey(key, true);
+            EnqueueKey(key, true);
         }
 
         private void SendCharacters(string value)
@@ -144,7 +151,32 @@ namespace Benkei
             ImeUtility.TryTurnOnHiragana();
         }
 
-        private static void SendKey(ushort keyCode, bool keyUp)
+        private void EnqueueKey(ushort keyCode, bool keyUp)
+        {
+            _keyQueue.Enqueue((keyCode, keyUp));
+        }
+
+        private void ProcessKeyQueue()
+        {
+            if (Interlocked.Exchange(ref _isProcessingQueue, 1) == 1)
+            {
+                return;
+            }
+
+            try
+            {
+                if (_keyQueue.TryDequeue(out var item))
+                {
+                    SendKeyImmediate(item.keyCode, item.keyUp);
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isProcessingQueue, 0);
+            }
+        }
+
+        private static void SendKeyImmediate(ushort keyCode, bool keyUp)
         {
             var input = new INPUT
             {
@@ -174,7 +206,6 @@ namespace Benkei
             {
                 Debug.WriteLine($"[SendKey] SUCCESS! Sent {result} event(s)");
             }
-            System.Threading.Thread.Sleep(10);
         }
 
         private static void SendUnicode(ushort rune, bool keyUp)
