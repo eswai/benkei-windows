@@ -1239,8 +1239,8 @@
 - mae: []
   douji: [C, V, I]
   type:
-  # {vk1Csc079} 無変換
-    - tap: Muhenkan
+  # {vk1Csc079} 再変換
+    - tap: Henkan
 - mae: []
   douji: [C, V, O]
   type:
