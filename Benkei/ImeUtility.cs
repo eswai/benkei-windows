@@ -27,7 +27,7 @@ namespace Benkei
         {
             if (!TryGetFocusedWindow(out var foreground))
             {
-                Console.WriteLine("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
+                Logger.Log("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
                 return false;
             }
 
@@ -36,13 +36,13 @@ namespace Benkei
             var languageId = layout.ToInt64() & 0xFFFF;
             if (languageId != 0x0411)
             {
-                Console.WriteLine("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
+                Logger.Log("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
                 return false;
             }
 
             if (!TryGetDefaultContext(out var defaultContext))
             {
-                Console.WriteLine("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
+                Logger.Log("[Interceptor] デフォルトIMEウィンドウの取得に失敗");
                 return false;
             }
 
@@ -51,7 +51,7 @@ namespace Benkei
 
             if (!isOpen)
             {
-                Console.WriteLine("[Interceptor] IME==オフ");
+                Logger.Log("[Interceptor] IME==オフ");
                 return false;
             }
 
@@ -59,7 +59,7 @@ namespace Benkei
             var conversion = conversionResult.ToInt32();
 
             var isNativeMode = (conversion & ImeCmodeNative) != 0;
-            Console.WriteLine($"[Interceptor] IME変換モード: 0x{conversion:X}, ネイティブ: {isNativeMode}");
+            Logger.Log($"[Interceptor] IME変換モード: 0x{conversion:X}, ネイティブ: {isNativeMode}");
             return isNativeMode;
         }
 
@@ -68,7 +68,7 @@ namespace Benkei
             var foreground = GetForegroundWindow();
             if (foreground == IntPtr.Zero)
             {
-                Console.WriteLine("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
+                Logger.Log("[Interceptor] フォアグラウンドウィンドウの取得に失敗");
                 return false;
             }
 
@@ -77,14 +77,14 @@ namespace Benkei
             var languageId = layout.ToInt64() & 0xFFFF;
             if (languageId != 0x0411)
             {
-                Console.WriteLine("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
+                Logger.Log("[Interceptor] 日本語入力以外のキーボードレイアウトがアクティブ");
                 return false;
             }
 
             var context = ImmGetContext(foreground);
             if (context == IntPtr.Zero)
             {
-                Console.WriteLine("[Interceptor] IMEコンテキストの取得に失敗");
+                Logger.Log("[Interceptor] IMEコンテキストの取得に失敗");
                 return false;
             }
 
@@ -92,18 +92,18 @@ namespace Benkei
             {
                 if (!ImmGetOpenStatus(context))
                 {
-                    Console.WriteLine("[Interceptor] IMEがオープンではありません");
+                    Logger.Log("[Interceptor] IMEがオープンではありません");
                     return false;
                 }
 
                 const int ImeCmodeNative = 0x0001;
                 if (ImmGetConversionStatus(context, out var conversion, out _))
                 {
-                    Console.WriteLine("[Interceptor] IMEの変換モードを確認");
+                    Logger.Log("[Interceptor] IMEの変換モードを確認");
                     return (conversion & ImeCmodeNative) != 0;
                 }
 
-                Console.WriteLine("[Interceptor] 日本語入力モード");
+                Logger.Log("[Interceptor] 日本語入力モード");
                 return true;
             }
             finally

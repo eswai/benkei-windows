@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Benkei
@@ -14,10 +15,12 @@ namespace Benkei
         private ToolStripMenuItem _toggleConversionMenuItem;
         private bool _conversionEnabled = true;
         private string _configPath;
+        private const int MaxLogLines = 200;
 
         public Form1()
         {
             InitializeComponent();
+            Logger.SetSink(Log);
             InitializeTrayComponents();
             Load += OnLoaded;
             FormClosing += OnClosing;
@@ -28,22 +31,22 @@ namespace Benkei
         {
             try
             {
-                Console.WriteLine("[Benkei] フォームロード開始");
+                Log("フォームロード開始");
                 var configPath = ResolveConfigPath();
                 _configPath = configPath;
-                Console.WriteLine($"[Benkei] 設定ファイル: {configPath}");
+                Log($"設定ファイル: {configPath}");
                 var alphabetConfigPath = ResolveAlphabetConfigPath();
-                Console.WriteLine($"[Benkei] アルファベット設定: {alphabetConfigPath}");
+                Log($"アルファベット設定: {alphabetConfigPath}");
                 var alphabetLoader = new AlphabetConfigLoader();
                 var alphabetConfig = alphabetLoader.Load(alphabetConfigPath);
                 var loader = new NaginataConfigLoader();
                 var rules = loader.Load(configPath);
-                Console.WriteLine($"[Benkei] ルール読み込み完了: {rules.Count}件");
+                Log($"ルール読み込み完了: {rules.Count}件");
                 var engine = new NaginataEngine(rules);
                 _interceptor = new KeyboardInterceptor(engine, alphabetConfig, OnConversionStateChanged);
                 _interceptor.Start();
                 _interceptor.SetConversionEnabled(_conversionEnabled);
-                Console.WriteLine("[Benkei] キーボードフック開始");
+                Log("キーボードフック開始");
                 if (_toggleConversionMenuItem != null)
                 {
                     _toggleConversionMenuItem.Enabled = true;
@@ -53,8 +56,8 @@ namespace Benkei
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Benkei] エラー: {ex.Message}");
-                Console.WriteLine($"[Benkei] スタックトレース: {ex.StackTrace}");
+                Log($"エラー: {ex.Message}");
+                Log($"スタックトレース: {ex.StackTrace}");
                 statusLabel.Text = "エラー: 設定を読み込めませんでした";
                 MessageBox.Show(this, ex.Message, "Benkei", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -69,9 +72,9 @@ namespace Benkei
                 return;
             }
 
-            Console.WriteLine("[Benkei] フォームクローズ開始");
+            Log("フォームクローズ開始");
             _interceptor?.Dispose();
-            Console.WriteLine("[Benkei] キーボードフック停止");
+            Log("キーボードフック停止");
             if (_notifyIcon != null)
             {
                 _notifyIcon.Visible = false;
@@ -230,6 +233,35 @@ namespace Benkei
             {
                 _notifyIcon.Text = _conversionEnabled ? "Benkei (変換ON)" : "Benkei (変換OFF)";
             }
+        }
+
+        private void Log(string message)
+        {
+            var formatted = $"[Benkei] {message}";
+            Console.WriteLine(formatted);
+            AppendLog(formatted);
+        }
+
+        private void AppendLog(string message)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<string>(AppendLog), message);
+                return;
+            }
+
+            var line = $"{DateTime.Now:HH:mm:ss} {message}";
+            logTextBox.AppendText(line + Environment.NewLine);
+
+            var lines = logTextBox.Lines;
+            if (lines.Length > MaxLogLines)
+            {
+                var trimmed = lines.Skip(lines.Length - MaxLogLines).ToArray();
+                logTextBox.Lines = trimmed;
+            }
+
+            logTextBox.SelectionStart = logTextBox.Text.Length;
+            logTextBox.ScrollToCaret();
         }
     }
 }

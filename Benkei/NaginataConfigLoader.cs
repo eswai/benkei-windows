@@ -26,13 +26,13 @@ namespace Benkei
                 throw new FileNotFoundException($"Naginata config not found at '{filePath}'.", filePath);
             }
 
-            Console.WriteLine($"[Benkei] YAML読み込み開始: {filePath}");
+            Logger.Log($"[Benkei] YAML読み込み開始: {filePath}");
             List<NaginataYamlCommand> commands;
             using (var reader = File.OpenText(filePath))
             {
                 commands = _deserializer.Deserialize<List<NaginataYamlCommand>>(reader) ?? new List<NaginataYamlCommand>();
             }
-            Console.WriteLine($"[Benkei] YAMLコマンド解析完了: {commands.Count}件");
+            Logger.Log($"[Benkei] YAMLコマンド解析完了: {commands.Count}件");
 
             var rules = new List<NaginataRule>(commands.Count);
             foreach (var command in commands)
@@ -48,7 +48,7 @@ namespace Benkei
                 rules.Add(new NaginataRule(mae, douji, actions));
             }
 
-            Console.WriteLine($"[Benkei] ルール変換完了: {rules.Count}件");
+            Logger.Log($"[Benkei] ルール変換完了: {rules.Count}件");
             return rules;
         }
 

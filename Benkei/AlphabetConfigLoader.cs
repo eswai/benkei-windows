@@ -25,7 +25,7 @@ namespace Benkei
                 throw new FileNotFoundException($"alphabet.yaml not found at '{filePath}'.", filePath);
             }
 
-            Console.WriteLine($"[Benkei] alphabet.yaml 読み込み開始: {filePath}");
+            Logger.Log($"[Benkei] alphabet.yaml 読み込み開始: {filePath}");
 
             AlphabetYaml yaml;
             using (var reader = File.OpenText(filePath))
@@ -66,7 +66,7 @@ namespace Benkei
                 }
             }
 
-            Console.WriteLine($"[Benkei] alphabet.yaml remap数: {remap.Count}");
+            Logger.Log($"[Benkei] alphabet.yaml remap数: {remap.Count}");
             return new AlphabetConfig(kanaOnKeys, remap);
         }
 

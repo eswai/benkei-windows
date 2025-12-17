@@ -86,12 +86,12 @@ namespace Benkei
 
             if (!enabled)
             {
-                Console.WriteLine("[Interceptor] 入力変換 OFF");
+                Logger.Log("[Interceptor] 入力変換 OFF");
                 ResetStateInternal();
             }
             else if (!previous && enabled)
             {
-                Console.WriteLine("[Interceptor] 入力変換 ON");
+                Logger.Log("[Interceptor] 入力変換 ON");
             }
 
             _conversionStateChanged?.Invoke(enabled);
@@ -178,13 +178,13 @@ namespace Benkei
 
                     if (_isRepeating && !_allowRepeat)
                     {
-                        Console.WriteLine($"[Interceptor] リピートブロック: {keyCode}");
+                        Logger.Log($"[Interceptor] リピートブロック: {keyCode}");
                         return (IntPtr)1;
                     }
 
-                    Console.WriteLine($"[Interceptor] KeyDown: {keyCode}");
+                    Logger.Log($"[Interceptor] KeyDown: {keyCode}");
                     var actions = _engine.HandleKeyDown(keyCode);
-                    Console.WriteLine($"[Interceptor] アクション数: {actions.Count}");
+                    Logger.Log($"[Interceptor] アクション数: {actions.Count}");
                     _executor.Execute(actions);
                     return (IntPtr)1;
                 }
@@ -194,17 +194,17 @@ namespace Benkei
                     _pressedPhysicalKeys.Remove(keyCode);
                     _isRepeating = false;
                     _allowRepeat = false;
-                    Console.WriteLine($"[Interceptor] KeyUp: {keyCode}");
+                    Logger.Log($"[Interceptor] KeyUp: {keyCode}");
                     var actions = _engine.HandleKeyUp(keyCode);
-                    Console.WriteLine($"[Interceptor] アクション数: {actions.Count}");
+                    Logger.Log($"[Interceptor] アクション数: {actions.Count}");
                     _executor.Execute(actions);
                     return (IntPtr)1;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Interceptor] フックエラー: {ex.Message}");
-                Console.WriteLine($"[Interceptor] スタックトレース: {ex.StackTrace}");
+                Logger.Log($"[Interceptor] フックエラー: {ex.Message}");
+                Logger.Log($"[Interceptor] スタックトレース: {ex.StackTrace}");
                 ResetStateInternal();
             }
 
@@ -227,7 +227,7 @@ namespace Benkei
                     {
                         if (IsImeOnCombo(hjbuf, keyCode))
                         {
-                            Console.WriteLine("[Interceptor] IME ON トグル");
+                            Logger.Log("[Interceptor] IME ON トグル");
                             IMEON();
                             hjbuf = -1;
                             return true;
@@ -235,7 +235,7 @@ namespace Benkei
 
                         if (IsImeOffCombo(hjbuf, keyCode))
                         {
-                            Console.WriteLine("[Interceptor] IME OFF トグル");
+                            Logger.Log("[Interceptor] IME OFF トグル");
                             IMEOFF();
                             hjbuf = -1;
                             return true;
@@ -326,7 +326,7 @@ namespace Benkei
         {
             if (!ImeUtility.TryTurnOnHiragana())
             {
-                Console.WriteLine("[Interceptor] IME ON 失敗");
+                Logger.Log("[Interceptor] IME ON 失敗");
             }
             _engine.Reset();
         }
@@ -335,7 +335,7 @@ namespace Benkei
         {
             if (!ImeUtility.TryTurnOff())
             {
-                Console.WriteLine("[Interceptor] IME OFF 失敗");
+                Logger.Log("[Interceptor] IME OFF 失敗");
             }
             _engine.Reset();
         }

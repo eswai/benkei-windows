@@ -43,7 +43,7 @@ namespace Benkei
 
         public List<NaginataAction> HandleKeyDown(int keyCode)
         {
-            Console.WriteLine($"[Engine] KeyDown: {keyCode}, PressedKeys: [{string.Join(", ", _pressedKeys)}]");
+            Logger.Log($"[Engine] KeyDown: {keyCode}, PressedKeys: [{string.Join(", ", _pressedKeys)}]");
             _pressedKeys.Add(keyCode);
 
             if (keyCode == VirtualKeyMapper.Space || keyCode == VirtualKeyMapper.Return)
@@ -57,7 +57,7 @@ namespace Benkei
                 {
                     var candidate = last.Concat(new[] { keyCode }).ToList();
                     var candidateCount = NumberOfCandidates(candidate);
-                    Console.WriteLine($"[Engine] Candidate: [{string.Join(", ", candidate)}], Count: {candidateCount}");
+                    Logger.Log($"[Engine] Candidate: [{string.Join(", ", candidate)}], Count: {candidateCount}");
                     if (candidateCount > 0)
                     {
                         _pendingInput[_pendingInput.Count - 1] = candidate;
@@ -78,17 +78,17 @@ namespace Benkei
             }
 
             ApplyShiftChains(keyCode);
-            Console.WriteLine($"[Engine] PendingInput: {_pendingInput.Count}グループ");
+            Logger.Log($"[Engine] PendingInput: {_pendingInput.Count}グループ");
 
             if (_pendingInput.Count > 1)
             {
-                Console.WriteLine($"[Engine] Dequeue (複数グループ)");
+                Logger.Log($"[Engine] Dequeue (複数グループ)");
                 return DequeuePending();
             }
 
             if (_pendingInput.Count == 1 && NumberOfCandidates(_pendingInput[0]) == 1)
             {
-                Console.WriteLine($"[Engine] Dequeue (確定)");
+                Logger.Log($"[Engine] Dequeue (確定)");
                 return DequeuePending();
             }
 
@@ -97,13 +97,13 @@ namespace Benkei
 
         public List<NaginataAction> HandleKeyUp(int keyCode)
         {
-            Console.WriteLine($"[Engine] KeyUp: {keyCode}, PressedKeys: [{string.Join(", ", _pressedKeys)}]");
+            Logger.Log($"[Engine] KeyUp: {keyCode}, PressedKeys: [{string.Join(", ", _pressedKeys)}]");
             _pressedKeys.Remove(keyCode);
             var result = new List<NaginataAction>();
 
             if (_pressedKeys.Count == 0)
             {
-                Console.WriteLine($"[Engine] 全キー解放 - Pending処理: {_pendingInput.Count}グループ");
+                Logger.Log($"[Engine] 全キー解放 - Pending処理: {_pendingInput.Count}グループ");
                 while (_pendingInput.Count > 0)
                 {
                     result.AddRange(NgType(_pendingInput[0]));
@@ -114,7 +114,7 @@ namespace Benkei
             {
                 if (_pendingInput.Count > 0 && NumberOfCandidates(_pendingInput[0]) == 1)
                 {
-                    Console.WriteLine($"[Engine] 部分解放 - 確定処理");
+                    Logger.Log($"[Engine] 部分解放 - 確定処理");
                     result.AddRange(NgType(_pendingInput[0]));
                     _pendingInput.RemoveAt(0);
                 }
@@ -183,15 +183,15 @@ namespace Benkei
         {
             if (keys == null || keys.Count == 0)
             {
-                Console.WriteLine($"[Engine] NgType: 空入力");
+                Logger.Log($"[Engine] NgType: 空入力");
                 return new List<NaginataAction>();
             }
 
-            Console.WriteLine($"[Engine] NgType: [{string.Join(", ", keys)}]");
+            Logger.Log($"[Engine] NgType: [{string.Join(", ", keys)}]");
 
             if (keys.Count == 1 && keys[0] == VirtualKeyMapper.Return)
             {
-                Console.WriteLine($"[Engine] NgType: Returnキー検出");
+                Logger.Log($"[Engine] NgType: Returnキー検出");
                 return new List<NaginataAction> { new NaginataAction(NaginataActionType.Tap, "Return") };
             }
 
@@ -204,14 +204,14 @@ namespace Benkei
                 if (combined.SetEquals(normalized))
                 {
                     var actions = rule.CloneActions();
-                    Console.WriteLine($"[Engine] NgType: ルールマッチ - {actions.Count}個のアクション");
+                    Logger.Log($"[Engine] NgType: ルールマッチ - {actions.Count}個のアクション");
                     return actions;
                 }
             }
 
             if (keys.Count > 1)
             {
-                Console.WriteLine($"[Engine] NgType: 分割処理開始");
+                Logger.Log($"[Engine] NgType: 分割処理開始");
                 var lead = keys.Take(keys.Count - 1).ToList();
                 var lastKey = keys[keys.Count - 1];
                 var tail = new List<int> { lastKey };
@@ -220,7 +220,7 @@ namespace Benkei
                 return resolved;
             }
 
-            Console.WriteLine($"[Engine] NgType: マッチなし");
+            Logger.Log($"[Engine] NgType: マッチなし");
             return new List<NaginataAction>();
         }
 

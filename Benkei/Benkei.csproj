@@ -74,6 +74,7 @@
     <Compile Include="ImeUtility.cs" />
     <Compile Include="KeyboardInterceptor.cs" />
     <Compile Include="KeyActionExecutor.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="NaginataAction.cs" />
     <Compile Include="NaginataConfigLoader.cs" />
     <Compile Include="NaginataEngine.cs" />

@@ -45,7 +45,7 @@ namespace Benkei
                         }
                         else
                         {
-                            Console.WriteLine($"[Benkei] Unknown tap key '{action.Value}'.");
+                            Logger.Log($"[Benkei] Unknown tap key '{action.Value}'.");
                         }
 
                         break;
@@ -56,7 +56,7 @@ namespace Benkei
                         }
                         else
                         {
-                            Console.WriteLine($"[Benkei] Unknown press key '{action.Value}'.");
+                            Logger.Log($"[Benkei] Unknown press key '{action.Value}'.");
                         }
 
                         break;
@@ -67,7 +67,7 @@ namespace Benkei
                         }
                         else
                         {
-                            Console.WriteLine($"[Benkei] Unknown release key '{action.Value}'.");
+                            Logger.Log($"[Benkei] Unknown release key '{action.Value}'.");
                         }
 
                         break;
@@ -194,13 +194,13 @@ namespace Benkei
             };
 
             var cbSize = Marshal.SizeOf(typeof(INPUT));
-            Console.WriteLine($"[SendKey] Sending key: {keyCode}, keyUp: {keyUp}, cbSize: {cbSize}");
+            Logger.Log($"[SendKey] Sending key: {keyCode}, keyUp: {keyUp}, cbSize: {cbSize}");
             var result = SendInput(1, new[] { input }, cbSize);
             if (result == 0)
             {
                 var error = Marshal.GetLastWin32Error();
                 Debug.WriteLine($"[SendKey] FAILED! Error code: {error}");
-                Console.WriteLine($"[Benkei] SendInput failed: key={keyCode}, error={error}");
+                Logger.Log($"[Benkei] SendInput failed: key={keyCode}, error={error}");
             }
             else
             {
@@ -232,7 +232,7 @@ namespace Benkei
             {
                 var error = Marshal.GetLastWin32Error();
                 Debug.WriteLine($"[SendUnicode] FAILED! Error code: {error}");
-                Console.WriteLine($"[Benkei] SendInput failed: char='{(char)rune}', error={error}");
+                Logger.Log($"[Benkei] SendInput failed: char='{(char)rune}', error={error}");
             }
             else
             {
