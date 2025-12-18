@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Benkei/Benkei.csproj" Id="b189fa1a-d4ae-4e32-a5d2-5dfea1b7f345" />
+  <Project Path="Benkei.Tests/Benkei.Tests.csproj" Id="5808f0cc-7336-4b16-9b4f-8ce43c4d6b39" />
 </Solution>
