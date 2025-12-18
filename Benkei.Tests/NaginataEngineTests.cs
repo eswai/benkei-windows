@@ -16,15 +16,21 @@ namespace Benkei.Tests
             var engine = new NaginataEngine(LoadRulesFromYaml());
 
             var characters = new List<string>();
+            var keyEvents = new[]
+            {
+                (KeyCode: GetKeyCode("J"), IsKeyUp: false),
+                (KeyCode: GetKeyCode("J"), IsKeyUp: true),
+                (KeyCode: GetKeyCode("K"), IsKeyUp: false),
+                (KeyCode: GetKeyCode("K"), IsKeyUp: true),
+                (KeyCode: GetKeyCode("L"), IsKeyUp: false),
+                (KeyCode: GetKeyCode("L"), IsKeyUp: true)
+            };
 
-            characters.AddRange(ExtractOutputs(engine.HandleKeyDown(GetKeyCode("J"))));
-            characters.AddRange(ExtractOutputs(engine.HandleKeyUp(GetKeyCode("J"))));
-
-            characters.AddRange(ExtractOutputs(engine.HandleKeyDown(GetKeyCode("K"))));
-            characters.AddRange(ExtractOutputs(engine.HandleKeyUp(GetKeyCode("K"))));
-
-            characters.AddRange(ExtractOutputs(engine.HandleKeyDown(GetKeyCode("L"))));
-            characters.AddRange(ExtractOutputs(engine.HandleKeyUp(GetKeyCode("L"))));
+            foreach (var (keyCode, isKeyUp) in keyEvents)
+            {
+                var actions = isKeyUp ? engine.HandleKeyUp(keyCode) : engine.HandleKeyDown(keyCode);
+                characters.AddRange(ExtractOutputs(actions));
+            }
             
             Assert.AreEqual("AIU", string.Concat(characters));
         }
