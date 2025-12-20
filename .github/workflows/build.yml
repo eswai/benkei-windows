@@ -24,10 +24,10 @@ jobs:
         run: nuget restore Benkei/Benkei.csproj
 
       - name: Build
-        run: msbuild Benkei/Benkei.csproj /p:Configuration=Release /p:Platform=AnyCPU /t:Rebuild
+        run: msbuild Benkei/Benkei.csproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Benkei-Release
-          path: Benkei/bin/Release/
+          path: Benkei/bin/x64/Release/
