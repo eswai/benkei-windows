@@ -1,11 +1,20 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Benkei
 {
+    internal struct KeyEventData
+    {
+        public int KeyCode;
+        public bool IsKeyDown;
+        public bool IsKeyUp;
+    }
+
     internal sealed class KeyboardInterceptor : IDisposable
     {
         private readonly NaginataEngine _engine;
@@ -23,6 +32,10 @@ namespace Benkei
         private bool _shiftPressed;
         private bool _altPressed;
         private bool _windowsPressed;
+        private readonly ConcurrentQueue<KeyEventData> _keyEventQueue = new ConcurrentQueue<KeyEventData>();
+        private readonly AutoResetEvent _keyEventSignal = new AutoResetEvent(false);
+        private Thread _workerThread;
+        private volatile bool _workerRunning;
 
         public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig, Action<bool> conversionStateChanged = null)
         {
@@ -60,6 +73,16 @@ namespace Benkei
             {
                 throw new InvalidOperationException("Failed to install keyboard hook.");
             }
+
+            // ワーカースレッドの起動
+            _workerRunning = true;
+            _workerThread = new Thread(ProcessKeyEventQueue)
+            {
+                IsBackground = true,
+                Name = "KeyEventProcessor"
+            };
+            _workerThread.Start();
+            Logger.Log("[Interceptor] ワーカースレッド起動");
         }
 
         public void Stop()
@@ -71,12 +94,26 @@ namespace Benkei
 
             UnhookWindowsHookEx(_hookHandle);
             _hookHandle = IntPtr.Zero;
+
+            // ワーカースレッドの停止
+            _workerRunning = false;
+            _keyEventSignal.Set();
+            if (_workerThread != null && _workerThread.IsAlive)
+            {
+                if (!_workerThread.Join(1000))
+                {
+                    Logger.Log("[Interceptor] ワーカースレッド停止タイムアウト");
+                }
+            }
+            Logger.Log("[Interceptor] ワーカースレッド停止");
+
             ResetStateInternal();
         }
 
         public void Dispose()
         {
             Stop();
+            _keyEventSignal?.Dispose();
         }
 
         public void SetConversionEnabled(bool enabled)
@@ -213,21 +250,39 @@ namespace Benkei
                     }
 
                     HookLog($"[Interceptor] KeyDown: {keyCode}");
-                    var actions = _engine.HandleKeyDown(keyCode);
-                    HookLog($"[Interceptor] アクション数: {actions.Count}");
-                    _executor.Execute(actions);
+                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = true, IsKeyUp = false });
+                    _keyEventSignal.Set();
                     return (IntPtr)1;
                 }
 
                 if (isKeyUp)
                 {
+                    if (!_pressedPhysicalKeys.Contains(keyCode))
+                    {
+                        // 押されていないキーの離鍵は無視
+                        return (IntPtr)1;
+                    }
+
                     _pressedPhysicalKeys.Remove(keyCode);
+                    
+                    if (_isRepeating)
+                    {
+                        // リピート中にキーを離した場合、キューを空にする
+                        while (_keyEventQueue.TryDequeue(out _)) { }
+                        HookLog($"[Interceptor] リピート解除 & キュークリア: {keyCode}");
+                    }
+
                     _isRepeating = false;
                     _allowRepeat = false;
                     HookLog($"[Interceptor] KeyUp: {keyCode}");
-                    var actions = _engine.HandleKeyUp(keyCode);
-                    HookLog($"[Interceptor] アクション数: {actions.Count}");
-                    _executor.Execute(actions);
+                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = false, IsKeyUp = true });
+
+                    // if (_pressedPhysicalKeys.Count == 0)
+                    // {
+                    //     _keyEventQueue.Enqueue(new KeyEventData { KeyCode = 0xffff, IsKeyDown = true, IsKeyUp = false });
+                    // }
+
+                    _keyEventSignal.Set();
                     return (IntPtr)1;
                 }
             }
@@ -462,6 +517,46 @@ namespace Benkei
             }
 
             return false;
+        }
+
+        private void ProcessKeyEventQueue()
+        {
+            while (_workerRunning)
+            {
+                _keyEventSignal.WaitOne();
+
+                while (_keyEventQueue.TryDequeue(out var eventData))
+                {
+                    try
+                    {
+                        List<NaginataAction> actions;
+                        // if (eventData.KeyCode == 0xffff)
+                        // {
+                        //     _engine.Reset();
+                        //     continue;
+                        // }
+                        if (eventData.IsKeyDown)
+                        {
+                            actions = _engine.HandleKeyDown(eventData.KeyCode);
+                        }
+                        else if (eventData.IsKeyUp)
+                        {
+                            actions = _engine.HandleKeyUp(eventData.KeyCode);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        HookLog($"[Worker] アクション数: {actions.Count}");
+                        _executor.Execute(actions);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"[Worker] キー処理エラー: {ex.Message}");
+                    }
+                }
+            }
         }
 
         private void RestoreKanaModeIfNeeded()
