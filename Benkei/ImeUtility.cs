@@ -40,15 +40,6 @@ namespace Benkei
                 {
                     return true;
                 }
-
-                // フォールバック（この時だけ両方呼ぶ）
-                if (IsJapaneseInputActiveCurrentMicrosoftIME())
-                {
-                    System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 2);
-                    Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveCurrentMicrosoftIME に切替");
-                    return true;
-                }
-
                 return false;
             }
 
@@ -58,15 +49,6 @@ namespace Benkei
                 {
                     return true;
                 }
-
-                // フォールバック（この時だけ両方呼ぶ）
-                if (IsJapaneseInputActiveLegacyMicrosoftIME())
-                {
-                    System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 1);
-                    Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveLegacyMicrosoftIME に切替");
-                    return true;
-                }
-
                 return false;
             }
 
@@ -88,7 +70,7 @@ namespace Benkei
             return false;
         }
 
-        public static bool IsJapaneseInputActiveLegacyMicrosoftIME()
+        public static bool IsJapaneseInputActiveCurrentMicrosoftIME()
         {
             if (!TryGetFocusedWindow(out var foreground))
             {
@@ -128,7 +110,7 @@ namespace Benkei
             return isNativeMode;
         }
 
-        public static bool IsJapaneseInputActiveCurrentMicrosoftIME()
+        public static bool IsJapaneseInputActiveLegacyMicrosoftIME()
         {
             var foreground = GetForegroundWindow();
             if (foreground == IntPtr.Zero)
@@ -216,13 +198,28 @@ namespace Benkei
         public static bool TryHasUnconvertedText()
         {
             // まず通常の方法で確認
+            var preferred = System.Threading.Volatile.Read(ref _preferredJapaneseInputActiveChecker);
+            if (preferred == 1)
+            {
+                return TryHasUnconvertedTextLegacyMicrosoftIme();
+            }
+            if (preferred == 2)
+            {
+                return TryHasUnconvertedTextCurrentMicrosoftIME();
+            }
+
+            if (TryHasUnconvertedTextLegacyMicrosoftIme())
+            {
+                System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 1);
+                return true;
+            }
             if (TryHasUnconvertedTextCurrentMicrosoftIME())
             {
+                System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 2);
                 return true;
             }
 
-            // 旧 Microsoft IME 向けに別方法で確認
-            return TryHasUnconvertedTextLegacyMicrosoftIme();
+            return false;
         }
 
         public static bool TryHasUnconvertedTextCurrentMicrosoftIME()
