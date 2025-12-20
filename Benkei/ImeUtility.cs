@@ -8,6 +8,10 @@ namespace Benkei
         private const int WmImeControl = 0x0283;
         private const int ImcSetopenstatus = 0x0006;
         private const int ImcGetopenstatus = 0x0005;
+
+        // 追加: WM_IME_CONTROL で合成文字列の長さを取得（IMM 系 IME 向け）
+        private const int ImcGetcompositionstring = 0x0001;
+
         private const int IMC_SETCONVERSIONMODE = 0x0002;
         private const int ImmGetconversionmode = 0x0001;
         private const int ImeCmodeNative = 0x0001;
@@ -17,6 +21,9 @@ namespace Benkei
         private const int CModeHiragana = ImeCmodeNative | ImeCmodeFullshape | ImeCmodeRoman;
         private const int CModeKatakana = ImeCmodeNative | ImeCmodeFullshape | ImeCmodeKatakana;
         private const int GcsCompstr = 0x0008;
+
+        // 追加: 旧 Microsoft IME だと GCS_COMPSTR が 0 のことがあるため併用
+        private const int GcsCompreadstr = 0x0001;
 
         public static bool IsJapaneseInputActive()
         {
@@ -150,6 +157,18 @@ namespace Benkei
         // 未変換文字が存在するかどうかを取得します。
         public static bool TryHasUnconvertedText()
         {
+            // まず通常の方法で確認
+            if (TryHasUnconvertedTextCurrentIME())
+            {
+                return true;
+            }
+
+            // 旧 Microsoft IME 向けに別方法で確認
+            return TryHasUnconvertedTextLegacyMicrosoftIme();
+        }
+
+        public static bool TryHasUnconvertedTextCurrentIME()
+        {
             if (!TryGetFocusedWindow(out var focused))
             {
                 return false;
@@ -175,6 +194,31 @@ namespace Benkei
             {
                 ImmReleaseContext(focused, inputContext);
             }
+        }
+
+        /// <summary>
+        /// 旧「Microsoft IME (以前のバージョン)」向け: 未確定(未変換)の合成文字が存在するか。
+        /// WM_IME_CONTROL(IMC_GETCOMPOSITIONSTRING) 経由で長さを取得します。
+        /// </summary>
+        public static bool TryHasUnconvertedTextLegacyMicrosoftIme()
+        {
+            if (!TryGetFocusedWindow(out var focused))
+            {
+                return false;
+            }
+
+            var imeWnd = ImmGetDefaultIMEWnd(focused);
+            if (imeWnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // 旧 IME は COMPSTR が取れないケースがあるため COMPREADSTR も確認
+            var len1 = SendMessage(imeWnd, WmImeControl, (IntPtr)ImcGetcompositionstring, (IntPtr)GcsCompstr).ToInt32();
+            if (len1 > 0) return true;
+
+            var len2 = SendMessage(imeWnd, WmImeControl, (IntPtr)ImcGetcompositionstring, (IntPtr)GcsCompreadstr).ToInt32();
+            return len2 > 0;
         }
 
         private static bool TryGetDefaultContext(out IntPtr defaultContext)
