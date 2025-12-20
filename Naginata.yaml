@@ -1063,6 +1063,7 @@
   douji: [D, F, L]
   type:
   # +{↑ 7}
+    - repeat: true
     - press: Shift
     - tap: UpArrow
     - tap: UpArrow
@@ -1102,6 +1103,7 @@
   douji: [D, F, Period]
   type:
   # +{↓ 7}
+    - repeat: true
     - press: Shift
     - tap: DownArrow
     - tap: DownArrow
@@ -1321,6 +1323,7 @@
   douji: [C, V, Period]
   type:
   # +{← 7}
+    - repeat: true
     - press: Shift
     - tap: LeftArrow
     - tap: LeftArrow
@@ -1334,6 +1337,7 @@
   douji: [C, V, Slash]
   type:
   # +{→ 7}
+    - repeat: true
     - press: Shift
     - tap: RightArrow
     - tap: RightArrow
