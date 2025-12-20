@@ -14,6 +14,7 @@ namespace Benkei
         private readonly Action _resetRequest;
         private readonly HashSet<ushort> _latchedKeys = new HashSet<ushort>();
         private static readonly IntPtr BenkeiMarker = new IntPtr(0x42454E4B); // "BENK"
+        private static readonly int InputStructSize = Marshal.SizeOf(typeof(INPUT));
 
         public KeyActionExecutor(Action<bool> setRepeatAllowed, Action resetRequest)
         {
@@ -28,6 +29,7 @@ namespace Benkei
                 return;
             }
 
+            var tapBuffer = new List<INPUT>();
             foreach (var action in actions)
             {
                 switch (action.Kind)
@@ -35,7 +37,8 @@ namespace Benkei
                     case NaginataActionType.Tap:
                         if (TryGetKey(action.Value, out var tapKey))
                         {
-                            TapKey(tapKey);
+                            tapBuffer.Add(CreateKeyboardInput(tapKey, false));
+                            tapBuffer.Add(CreateKeyboardInput(tapKey, true));
                         }
                         else
                         {
@@ -46,7 +49,7 @@ namespace Benkei
                     case NaginataActionType.Press:
                         if (TryGetKey(action.Value, out var pressKey))
                         {
-                            PressKey(pressKey);
+                            tapBuffer.Add(CreateKeyboardInput(pressKey, false));
                         }
                         else
                         {
@@ -57,7 +60,7 @@ namespace Benkei
                     case NaginataActionType.Release:
                         if (TryGetKey(action.Value, out var releaseKey))
                         {
-                            ReleaseKey(releaseKey);
+                            tapBuffer.Add(CreateKeyboardInput(releaseKey, true));
                         }
                         else
                         {
@@ -66,28 +69,42 @@ namespace Benkei
 
                         break;
                     case NaginataActionType.Character:
+                        FlushTapBuffer(tapBuffer);
                         SendCharacters(action.Value);
                         break;
                     case NaginataActionType.Repeat:
+                        FlushTapBuffer(tapBuffer);
                         var allowRepeat = bool.TryParse(action.Value, out var parsed) && parsed;
                         _setRepeatAllowed(allowRepeat);
                         break;
                     case NaginataActionType.Reset:
+                        FlushTapBuffer(tapBuffer);
                         ReleaseLatchedKeys();
                         _setRepeatAllowed(false);
                         _resetRequest();
                         break;
                 }
             }
+
+            FlushTapBuffer(tapBuffer);
         }
 
         public void ReleaseLatchedKeys()
         {
-            foreach (var key in _latchedKeys.ToArray())
+            if (_latchedKeys.Count == 0)
             {
-                SendKey(key, true);
-                _latchedKeys.Remove(key);
+                return;
             }
+
+            var releases = new INPUT[_latchedKeys.Count];
+            var index = 0;
+            foreach (var key in _latchedKeys)
+            {
+                releases[index++] = CreateKeyboardInput(key, true);
+            }
+
+            _latchedKeys.Clear();
+            SendInputs(releases, "release latched keys");
         }
 
         private static bool TryGetKey(string name, out ushort keyCode)
@@ -104,22 +121,10 @@ namespace Benkei
 
         public void TapKey(ushort key)
         {
-            SendKey(key, false);
-            SendKey(key, true);
-        }
-
-        public void PressKey(ushort key)
-        {
-            if (_latchedKeys.Add(key))
-            {
-                SendKey(key, false);
-            }
-        }
-
-        public void ReleaseKey(ushort key)
-        {
-            _latchedKeys.Remove(key);
-            SendKey(key, true);
+            var tapBuffer = new List<INPUT>();
+            tapBuffer.Add(CreateKeyboardInput(key, false));
+            tapBuffer.Add(CreateKeyboardInput(key, true));
+            FlushTapBuffer(tapBuffer);
         }
 
         private void SendCharacters(string value)
@@ -136,18 +141,35 @@ namespace Benkei
                 TapKey((ushort)Keys.Return);
             }
             ImeUtility.TryTurnOff();
+            var unicodeInputs = new List<INPUT>(value.Length * 2);
             foreach (var ch in value)
             {
-                SendUnicode((ushort)ch, false);
-                SendUnicode((ushort)ch, true);
-                System.Threading.Thread.Sleep(10);
+                unicodeInputs.Add(CreateUnicodeInput((ushort)ch, false));
+                unicodeInputs.Add(CreateUnicodeInput((ushort)ch, true));
+            }
+
+            if (unicodeInputs.Count > 0)
+            {
+                SendInputs(unicodeInputs.ToArray(), $"unicode batch count={value.Length}");
+                Thread.Sleep(value.Length * 10);
             }
             ImeUtility.TryTurnOnHiragana();
         }
 
-        private static void SendKey(ushort keyCode, bool keyUp)
+        private void FlushTapBuffer(List<INPUT> tapBuffer)
         {
-            var input = new INPUT
+            if (tapBuffer == null || tapBuffer.Count == 0)
+            {
+                return;
+            }
+
+            SendInputs(tapBuffer.ToArray(), $"tap buffer count={tapBuffer.Count}");
+            tapBuffer.Clear();
+        }
+
+        private static INPUT CreateKeyboardInput(ushort keyCode, bool keyUp)
+        {
+            return new INPUT
             {
                 type = InputKeyboard,
                 U = new InputUnion
@@ -161,25 +183,11 @@ namespace Benkei
                     }
                 }
             };
-
-            var cbSize = Marshal.SizeOf(typeof(INPUT));
-            Logger.Log($"[SendKey] Sending key: {keyCode}, keyUp: {keyUp}, cbSize: {cbSize}");
-            var result = SendInput(1, new[] { input }, cbSize);
-            if (result == 0)
-            {
-                var error = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"[SendKey] FAILED! Error code: {error}");
-                Logger.Log($"[Benkei] SendInput failed: key={keyCode}, error={error}");
-            }
-            else
-            {
-                Debug.WriteLine($"[SendKey] SUCCESS! Sent {result} event(s)");
-            }
         }
 
-        private static void SendUnicode(ushort rune, bool keyUp)
+        private static INPUT CreateUnicodeInput(ushort rune, bool keyUp)
         {
-            var input = new INPUT
+            return new INPUT
             {
                 type = InputKeyboard,
                 U = new InputUnion
@@ -193,19 +201,26 @@ namespace Benkei
                     }
                 }
             };
+        }
 
-            var cbSize = Marshal.SizeOf(typeof(INPUT));
-            Debug.WriteLine($"[SendUnicode] Sending char: '{(char)rune}' (U+{rune:X4}), keyUp: {keyUp}, cbSize: {cbSize}");
-            var result = SendInput(1, new[] { input }, cbSize);
+        private static void SendInputs(INPUT[] inputs, string context)
+        {
+            if (inputs == null || inputs.Length == 0)
+            {
+                return;
+            }
+
+            Logger.Log($"[SendKey] Sending {inputs.Length} event(s): {context}, cbSize: {InputStructSize}");
+            var result = SendInput((uint)inputs.Length, inputs, InputStructSize);
             if (result == 0)
             {
                 var error = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"[SendUnicode] FAILED! Error code: {error}");
-                Logger.Log($"[Benkei] SendInput failed: char='{(char)rune}', error={error}");
+                Debug.WriteLine($"[SendKey] FAILED ({context}) Error code: {error}");
+                Logger.Log($"[Benkei] SendInput failed ({context}): error={error}");
             }
             else
             {
-                Debug.WriteLine($"[SendUnicode] SUCCESS! Sent {result} event(s)");
+                Debug.WriteLine($"[SendKey] SUCCESS ({context}) Sent {result} event(s)");
             }
         }
 
