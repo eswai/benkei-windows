@@ -99,6 +99,17 @@ namespace Benkei
 
         public bool GetConversionEnabled() => _conversionEnabled;
 
+        // フック内ログは遅延の主要因になりやすいので、通常はOFF推奨
+        private const bool HookVerboseLog = false;
+
+        private static void HookLog(string message)
+        {
+            if (HookVerboseLog)
+            {
+                Logger.Log(message);
+            }
+        }
+
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode < 0)
@@ -120,13 +131,13 @@ namespace Benkei
                 var hookData = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
                 var keyCode = hookData.vkCode;
 
-                if (TryUpdateModifierState(keyCode, isKeyDown, isKeyUp))
+                // Skip events sent by ourselves
+                if (hookData.dwExtraInfo == BenkeiMarker)
                 {
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
-                // Skip events sent by ourselves
-                if (hookData.dwExtraInfo == BenkeiMarker)
+                if (TryUpdateModifierState(keyCode, isKeyDown, isKeyUp))
                 {
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
@@ -141,9 +152,28 @@ namespace Benkei
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
+                // ここから「IME 状態が必要か？」を先に判定して、
+                // 不要なキーは IME 状態問い合わせなしで即パスする（軽量化）
+                var isNaginataKey = _engine.IsNaginataKey(keyCode);
+                var isImeToggleCandidate = IsImeToggleCandidate(keyCode);
+
+                var hasAlphabetMapping = _alphabetConfig != null && _alphabetConfig.TryGetRemappedKey(keyCode, out _);
+                var anyModifierPressed = _ctrlPressed || _shiftPressed || _altPressed || _windowsPressed;
+
+                var needsImeState =
+                    isNaginataKey ||                      // Naginata処理の可否に必要
+                    isImeToggleCandidate ||               // H/J/F/G の処理に必要
+                    (hasAlphabetMapping && anyModifierPressed); // 修飾キー＋リマップ時に必要
+
+                if (!needsImeState)
+                {
+                    // ここに来るキーはBenkei側で何もしないので即パス
+                    return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                }
+
                 var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
 
-                if (isJapaneseInputActive && (_ctrlPressed || _shiftPressed || _altPressed || _windowsPressed ) && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
+                if (isJapaneseInputActive && anyModifierPressed && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
                 {
                     return (IntPtr)1;
                 }
@@ -153,7 +183,7 @@ namespace Benkei
                     return (IntPtr)1;
                 }
 
-                if (!_engine.IsNaginataKey(keyCode) || !isJapaneseInputActive)
+                if (!isNaginataKey || !isJapaneseInputActive)
                 {
                     if (isKeyUp)
                     {
@@ -178,13 +208,13 @@ namespace Benkei
 
                     if (_isRepeating && !_allowRepeat)
                     {
-                        Logger.Log($"[Interceptor] リピートブロック: {keyCode}");
+                        HookLog($"[Interceptor] リピートブロック: {keyCode}");
                         return (IntPtr)1;
                     }
 
-                    Logger.Log($"[Interceptor] KeyDown: {keyCode}");
+                    HookLog($"[Interceptor] KeyDown: {keyCode}");
                     var actions = _engine.HandleKeyDown(keyCode);
-                    Logger.Log($"[Interceptor] アクション数: {actions.Count}");
+                    HookLog($"[Interceptor] アクション数: {actions.Count}");
                     _executor.Execute(actions);
                     return (IntPtr)1;
                 }
@@ -194,9 +224,9 @@ namespace Benkei
                     _pressedPhysicalKeys.Remove(keyCode);
                     _isRepeating = false;
                     _allowRepeat = false;
-                    Logger.Log($"[Interceptor] KeyUp: {keyCode}");
+                    HookLog($"[Interceptor] KeyUp: {keyCode}");
                     var actions = _engine.HandleKeyUp(keyCode);
-                    Logger.Log($"[Interceptor] アクション数: {actions.Count}");
+                    HookLog($"[Interceptor] アクション数: {actions.Count}");
                     _executor.Execute(actions);
                     return (IntPtr)1;
                 }
