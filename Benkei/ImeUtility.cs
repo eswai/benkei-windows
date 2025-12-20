@@ -5,6 +5,10 @@ namespace Benkei
 {
     internal static class ImeUtility
     {
+        // 0: 未確定(未選択), 1: IsJapaneseInputActiveLegacyMicrosoftIME, 2: IsJapaneseInputActiveCurrentMicrosoftIME
+        // いったん true を返した方式を優先して以後の判定コストを下げる。
+        private static int _preferredJapaneseInputActiveChecker;
+
         private const int WmImeControl = 0x0283;
         private const int ImcSetopenstatus = 0x0006;
         private const int ImcGetopenstatus = 0x0005;
@@ -27,10 +31,64 @@ namespace Benkei
 
         public static bool IsJapaneseInputActive()
         {
-            return IsJapaneseInputActive1() || IsJapaneseInputActive2();
+            // 最初に true になった方を記憶し、基本は片方だけ呼ぶ。
+            // ただし、優先方式が false の場合のみもう片方を試して切り替える（環境差/一時失敗に強くする）。
+            var preferred = System.Threading.Volatile.Read(ref _preferredJapaneseInputActiveChecker);
+            if (preferred == 1)
+            {
+                if (IsJapaneseInputActiveLegacyMicrosoftIME())
+                {
+                    return true;
+                }
+
+                // フォールバック（この時だけ両方呼ぶ）
+                if (IsJapaneseInputActiveCurrentMicrosoftIME())
+                {
+                    System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 2);
+                    Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveCurrentMicrosoftIME に切替");
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (preferred == 2)
+            {
+                if (IsJapaneseInputActiveCurrentMicrosoftIME())
+                {
+                    return true;
+                }
+
+                // フォールバック（この時だけ両方呼ぶ）
+                if (IsJapaneseInputActiveLegacyMicrosoftIME())
+                {
+                    System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 1);
+                    Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveLegacyMicrosoftIME に切替");
+                    return true;
+                }
+
+                return false;
+            }
+
+            // 未選択: 1 → 2 の順で試して、最初に true になった方を記憶する
+            if (IsJapaneseInputActiveLegacyMicrosoftIME())
+            {
+                System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 1);
+                Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveLegacyMicrosoftIME に固定");
+                return true;
+            }
+
+            if (IsJapaneseInputActiveCurrentMicrosoftIME())
+            {
+                System.Threading.Volatile.Write(ref _preferredJapaneseInputActiveChecker, 2);
+                Logger.Log("[Interceptor] 日本語入力判定: チェッカーを IsJapaneseInputActiveCurrentMicrosoftIME に固定");
+                return true;
+            }
+
+            return false;
         }
 
-        public static bool IsJapaneseInputActive1()
+        public static bool IsJapaneseInputActiveLegacyMicrosoftIME()
         {
             if (!TryGetFocusedWindow(out var foreground))
             {
@@ -70,7 +128,7 @@ namespace Benkei
             return isNativeMode;
         }
 
-        public static bool IsJapaneseInputActive2()
+        public static bool IsJapaneseInputActiveCurrentMicrosoftIME()
         {
             var foreground = GetForegroundWindow();
             if (foreground == IntPtr.Zero)
@@ -158,7 +216,7 @@ namespace Benkei
         public static bool TryHasUnconvertedText()
         {
             // まず通常の方法で確認
-            if (TryHasUnconvertedTextCurrentIME())
+            if (TryHasUnconvertedTextCurrentMicrosoftIME())
             {
                 return true;
             }
@@ -167,7 +225,7 @@ namespace Benkei
             return TryHasUnconvertedTextLegacyMicrosoftIme();
         }
 
-        public static bool TryHasUnconvertedTextCurrentIME()
+        public static bool TryHasUnconvertedTextCurrentMicrosoftIME()
         {
             if (!TryGetFocusedWindow(out var focused))
             {
