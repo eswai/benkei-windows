@@ -944,6 +944,7 @@
   type:
   # ／{改行}
     - character: ／
+    - tap: Return
 # - mae: [J, K]
 #   douji: [E]
 - mae: []
@@ -957,57 +958,67 @@
   douji: [J, K, T]
   type:
   # ・(未確定)
-    - tap: Slash
+    - character: ・
 - mae: []
   douji: [J, K, A]
   type:
   # ……{改行}
     - character: ……
+    - tap: Return
 - mae: []
   douji: [J, K, S]
   type:
   # 『{改行}
     - character: 『
+    - tap: Return
 - mae: []
   douji: [J, K, D]
   type:
   # ？{改行}
     - character: ？
+    - tap: Return
 - mae: []
   douji: [J, K, F]
   type:
   # 「{改行}
     - character: 「
+    - tap: Return
 - mae: []
   douji: [J, K, G]
   type:
   #  ({改行}
     - character: （
+    - tap: Return
 - mae: []
   douji: [J, K, Z]
   type:
   # ――{改行}
     - character: ――
+    - tap: Return
 - mae: []
   douji: [J, K, X]
   type:
   # 』{改行}
     - character: 』
+    - tap: Return
 - mae: []
   douji: [J, K, C]
   type:
   # ！{改行}
     - character: ！
+    - tap: Return
 - mae: []
   douji: [J, K, V]
   type:
   # 」{改行}
     - character: 」
+    - tap: Return
 - mae: []
   douji: [J, K, B]
   type:
   # ){改行}
     - character: ）
+    - tap: Return
 - mae: []
   douji: [D, F, Y]
   type:
@@ -1124,13 +1135,15 @@
 - mae: []
   douji: [M, Comma, Q]
   type:
-  # ｜
+  # ｜{改行}
     - character: ｜
+    - tap: Return
 - mae: []
   douji: [M, Comma, W]
   # 　　　×　　　×　　　×{改行 2}
   type:
     - character: 　　　×　　　×　　　×
+    - tap: Return
     - tap: Return
 - mae: []
   douji: [M, Comma, E]
@@ -1155,16 +1168,19 @@
   type:
   # 〇{改行}
     - character: 〇
+    - tap: Return
 - mae: []
   douji: [M, Comma, A]
   type:
   # 《{改行} 
     - character: 《
+    - tap: Return
 - mae: []
   douji: [M, Comma, S]
   type:
   # 【{改行}
     - character: 【
+    - tap: Return
 - mae: []
   douji: [M, Comma, D]
   type:
@@ -1199,16 +1215,19 @@
   type:
   # 》{改行}
     - character: 》
+    - tap: Return
 - mae: []
   douji: [M, Comma, X]
   type:
   # 】{改行}
     - character: 】
+    - tap: Return
 - mae: []
   douji: [M, Comma, C]
   type:
   # 」{改行}{改行}
     - character: 」
+    - tap: Return
     - tap: Return
 - mae: []
   douji: [M, Comma, V]
@@ -1216,7 +1235,9 @@
   # 」{改行}{改行}「{改行} 
     - character: 」
     - tap: Return
+    - tap: Return
     - character: 「
+    - tap: Return
 - mae: []
   douji: [M, Comma, B]
   type:

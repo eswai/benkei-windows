@@ -149,6 +149,11 @@ namespace Benkei
 
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
+            if (!_conversionEnabled)
+            {
+                return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+            }
+
             if (nCode < 0)
             {
                 return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
@@ -182,11 +187,6 @@ namespace Benkei
                 if (TryHandleConversionToggle(keyCode, isKeyDown))
                 {
                     return (IntPtr)1;
-                }
-
-                if (!_conversionEnabled)
-                {
-                    return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
                 // ここから「IME 状態が必要か？」を先に判定して、
@@ -224,9 +224,16 @@ namespace Benkei
                 {
                     if (isKeyUp)
                     {
+                        // 記号入力で英字モードになっているときにキーアップすると、キーが押されっぱなしになる
+                        if (_pressedPhysicalKeys.Contains(keyCode))
+                        {
+                            _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = false, IsKeyUp = true });
+                            _keyEventSignal.Set();
+                        }
                         _pressedPhysicalKeys.Remove(keyCode);
                         _isRepeating = false;
                         _allowRepeat = false;
+
                     }
 
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
@@ -259,8 +266,8 @@ namespace Benkei
                 {
                     if (!_pressedPhysicalKeys.Contains(keyCode))
                     {
-                        // 押されていないキーの離鍵は無視
-                        return (IntPtr)1;
+                        // 押されていないキーの離鍵はOSに渡す（IME OFF中に押されたキーの可能性があるため）
+                        return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                     }
 
                     _pressedPhysicalKeys.Remove(keyCode);

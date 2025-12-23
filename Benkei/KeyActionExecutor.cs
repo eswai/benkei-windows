@@ -140,7 +140,6 @@ namespace Benkei
             {
                 TapKey((ushort)Keys.Return);
             }
-            ImeUtility.TryTurnOff();
             var unicodeInputs = new List<INPUT>(value.Length * 2);
             foreach (var ch in value)
             {
@@ -151,9 +150,7 @@ namespace Benkei
             if (unicodeInputs.Count > 0)
             {
                 SendInputs(unicodeInputs.ToArray(), $"unicode batch count={value.Length}");
-                Thread.Sleep(value.Length * 10);
             }
-            ImeUtility.TryTurnOnHiragana();
         }
 
         private void FlushTapBuffer(List<INPUT> tapBuffer)
