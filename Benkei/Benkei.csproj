@@ -89,7 +89,6 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="AlphabetConfigLoader.cs" />
     <Compile Include="ImeUtility.cs" />
     <Compile Include="KeyboardInterceptor.cs" />
     <Compile Include="KeyActionExecutor.cs" />

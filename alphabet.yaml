@@ -1,45 +1,581 @@
-remap:
-  # Alphabetic keys (QWERTY order)
-  Q : Q
-  W : W
-  E : E
-  R : R
-  T : T
-  Y : Y
-  U : U
-  I : I
-  O : O
-  P : P
-  A : A
-  S : S
-  D : D
-  F : F
-  G : G
-  H : H
-  J : J
-  K : K
-  L : L
-  Semicolon : Semicolon
-  Z : Z
-  X : X
-  C : C
-  V : V
-  B : B
-  N : N
-  M : M
-  Comma : Comma
-  Period : Period
-  Slash : Slash
-  Backspace: Backspace
-  
-  # Numeric keys
-  '0' : '0'
-  '1' : '1'
-  '2' : '2'
-  '3' : '3'
-  '4' : '4'
-  '5' : '5'
-  '6' : '6'
-  '7' : '7'
-  '8' : '8'
-  '9' : '9'
+# Alphabetic keys (QWERTY order)
+- mae: []
+  douji: [Space]
+  type:
+    - tap: Space
+- mae: []
+  douji: [Return]
+  type:
+    - tap: Return
+- mae: []
+  douji: [Q]
+  type:
+    - tap: Q
+- mae: []
+  douji: [W]
+  type:
+    - tap: W
+- mae: []
+  douji: [E]
+  type:
+    - tap: E
+- mae: []
+  douji: [R]
+  type:
+    - tap: R
+- mae: []
+  douji: [T]
+  type:
+    - tap: T
+- mae: []
+  douji: [Y]
+  type:
+    - tap: Y
+- mae: []
+  douji: [U]
+  type:
+    - tap: U
+- mae: []
+  douji: [I]
+  type:
+    - tap: I
+- mae: []
+  douji: [O]
+  type:
+    - tap: O
+- mae: []
+  douji: [P]
+  type:
+    - tap: P
+- mae: []
+  douji: [A]
+  type:
+    - tap: A
+- mae: []
+  douji: [S]
+  type:
+    - tap: S
+- mae: []
+  douji: [D]
+  type:
+    - tap: D
+- mae: []
+  douji: [F]
+  type:
+    - tap: F
+- mae: []
+  douji: [G]
+  type:
+    - tap: G
+- mae: []
+  douji: [H]
+  type:
+    - tap: H
+- mae: []
+  douji: [J]
+  type:
+    - tap: J
+- mae: []
+  douji: [K]
+  type:
+    - tap: K
+- mae: []
+  douji: [L]
+  type:
+    - tap: L
+- mae: []
+  douji: [Semicolon]
+  type:
+    - tap: Semicolon
+- mae: []
+  douji: [Z]
+  type:
+    - tap: Z
+- mae: []
+  douji: [X]
+  type:
+    - tap: X
+- mae: []
+  douji: [C]
+  type:
+    - tap: C
+- mae: []
+  douji: [V]
+  type:
+    - tap: V
+- mae: []
+  douji: [B]
+  type:
+    - tap: B
+- mae: []
+  douji: [N]
+  type:
+    - tap: N
+- mae: []
+  douji: [M]
+  type:
+    - tap: M
+- mae: []
+  douji: [Comma]
+  type:
+    - tap: Comma
+- mae: []
+  douji: [Period]
+  type:
+    - tap: Period
+- mae: []
+  douji: [Slash]
+  type:
+    - tap: Slash
+# ---------------------------------------- コンボ
+- mae: []
+  douji: [F, G]
+  type:
+    - reset: true
+    - tap: ImeOff
+- mae: []
+  douji: [H, J]
+  type:
+    - reset: true
+    - tap: ImeOn
+- mae: []
+  douji: [V, M]
+  type:
+    - tap: Return
+# ---------------------------------------- 編集モード1
+- mae: []
+  douji: [J, K, Q]
+  type:
+  # ^{End} 最新の位置へ
+    - press: Control
+    - tap: End
+    - release: Control
+- mae: []
+  douji: [J, K, W]
+  type:
+  # ／{改行}
+    - character: ／
+    - tap: Return
+# - mae: [J, K]
+#   douji: [E]
+- mae: []
+  douji: [J, K, R]
+  type:
+  # ^s 保存
+    - press: Control
+    - tap: S
+    - release: Control
+- mae: []
+  douji: [J, K, T]
+  type:
+  # ・(未確定)
+    - character: ・
+- mae: []
+  douji: [J, K, A]
+  type:
+  # ……{改行}
+    - character: ……
+    - tap: Return
+- mae: []
+  douji: [J, K, S]
+  type:
+  # 『{改行}
+    - character: 『
+    - tap: Return
+- mae: []
+  douji: [J, K, D]
+  type:
+  # ？{改行}
+    - character: ？
+    - tap: Return
+- mae: []
+  douji: [J, K, F]
+  type:
+  # 「{改行}
+    - character: 「
+    - tap: Return
+- mae: []
+  douji: [J, K, G]
+  type:
+  #  ({改行}
+    - character: （
+    - tap: Return
+- mae: []
+  douji: [J, K, Z]
+  type:
+  # ――{改行}
+    - character: ――
+    - tap: Return
+- mae: []
+  douji: [J, K, X]
+  type:
+  # 』{改行}
+    - character: 』
+    - tap: Return
+- mae: []
+  douji: [J, K, C]
+  type:
+  # ！{改行}
+    - character: ！
+    - tap: Return
+- mae: []
+  douji: [J, K, V]
+  type:
+  # 」{改行}
+    - character: 」
+    - tap: Return
+- mae: []
+  douji: [J, K, B]
+  type:
+  # ){改行}
+    - character: ）
+    - tap: Return
+- mae: []
+  douji: [D, F, Y]
+  type:
+  # {Home} 行頭
+    - tap: Home
+- mae: []
+  douji: [D, F, U]
+  type:
+  # +{End}{BS} 行末削除
+    - press: Shift
+    - tap: End
+    - release: Shift
+    - tap: Backspace
+- mae: []
+  douji: [D, F, I]
+  type:
+  # {vk1Csc079} 再変換
+    - tap: Henkan
+- mae: []
+  douji: [D, F, O]
+  type:
+  # {Del}
+    - tap: Delete
+- mae: []
+  douji: [D, F, P]
+  type:
+  # +{Esc 2} 入力キャンセル
+    - press: Shift
+    - tap: Escape
+    - tap: Escape
+    - release: Shift
+- mae: []
+  douji: [D, F, H]
+  type:
+  # {Enter}{End} 確定行末
+    - tap: Return
+    - tap: End
+- mae: []
+  douji: [D, F, J]
+  type:
+  # {↑}
+    - repeat: true
+    - tap: UpArrow
+- mae: []
+  douji: [D, F, K]
+  type:
+  # +{↑}
+    - repeat: true
+    - press: Shift
+    - tap: UpArrow
+    - release: Shift
+- mae: []
+  douji: [D, F, L]
+  type:
+  # +{↑ 7}
+    - repeat: true
+    - press: Shift
+    - tap: UpArrow
+    - tap: UpArrow
+    - tap: UpArrow
+    - tap: UpArrow
+    - tap: UpArrow
+    - tap: UpArrow
+    - tap: UpArrow
+    - release: Shift
+- mae: []
+  douji: [D, F, Semicolon]
+  type:
+  # ^i
+    - press: Control
+    - tap: i
+    - release: Control
+- mae: []
+  douji: [D, F, N]
+  type:
+  # {End}
+    - tap: End
+- mae: []
+  douji: [D, F, M]
+  type:
+  # {↓}
+    - repeat: true
+    - tap: DownArrow
+- mae: []
+  douji: [D, F, Comma]
+  type:
+  # +{↓}
+    - repeat: true
+    - press: Shift
+    - tap: DownArrow
+    - release: Shift
+- mae: []
+  douji: [D, F, Period]
+  type:
+  # +{↓ 7}
+    - repeat: true
+    - press: Shift
+    - tap: DownArrow
+    - tap: DownArrow
+    - tap: DownArrow
+    - tap: DownArrow
+    - tap: DownArrow
+    - tap: DownArrow
+    - tap: DownArrow
+    - release: Shift
+- mae: []
+  douji: [D, F, Slash]
+  type:
+  # ^u
+    - press: Control
+    - tap: u
+    - release: Control
+# ---------------------------------------- 編集モード2
+- mae: []
+  douji: [M, Comma, Q]
+  type:
+  # ｜{改行}
+    - character: ｜
+    - tap: Return
+- mae: []
+  douji: [M, Comma, W]
+  # 　　　×　　　×　　　×{改行 2}
+  type:
+    - character: 　　　×　　　×　　　×
+    - tap: Return
+    - tap: Return
+- mae: []
+  douji: [M, Comma, E]
+  #{Home}{→}{End}{Del 2}{←} セリフ接ぎ
+  type:
+    - tap: Home
+    - tap: RightArrow
+    - tap: End
+    - tap: Delete
+    - tap: Delete
+    - tap: LeftArrow
+- mae: []
+  douji: [M, Comma, R]
+  type:
+  #{Home}{改行}{Space 1}{←} セリフ切り
+    - tap: Home
+    - tap: Return
+    - tap: Space
+    - tap: LeftArrow
+- mae: []
+  douji: [M, Comma, T]
+  type:
+  # 〇{改行}
+    - character: 〇
+    - tap: Return
+- mae: []
+  douji: [M, Comma, A]
+  type:
+  # 《{改行} 
+    - character: 《
+    - tap: Return
+- mae: []
+  douji: [M, Comma, S]
+  type:
+  # 【{改行}
+    - character: 【
+    - tap: Return
+- mae: []
+  douji: [M, Comma, D]
+  type:
+  # {Home}{→}{End}{Del 4}{←} ト書き接ぎ
+    - tap: Home
+    - tap: RightArrow
+    - tap: End
+    - tap: Delete
+    - tap: Delete
+    - tap: Delete
+    - tap: Delete
+    - tap: LeftArrow
+- mae: []
+  douji: [M, Comma, F]
+  type:
+  # {Home}{改行}{Space 3}{←} ト書き切り
+    - tap: Home
+    - tap: Return
+    - tap: Space
+    - tap: Space
+    - tap: Space
+    - tap: LeftArrow
+- mae: []
+  douji: [M, Comma, G]
+  type:
+  # {Space 3}
+    - tap: Space
+    - tap: Space
+    - tap: Space
+- mae: []
+  douji: [M, Comma, Z]
+  type:
+  # 》{改行}
+    - character: 》
+    - tap: Return
+- mae: []
+  douji: [M, Comma, X]
+  type:
+  # 】{改行}
+    - character: 】
+    - tap: Return
+- mae: []
+  douji: [M, Comma, C]
+  type:
+  # 」{改行}{改行}
+    - character: 」
+    - tap: Return
+    - tap: Return
+- mae: []
+  douji: [M, Comma, V]
+  type:
+  # 」{改行}{改行}「{改行} 
+    - character: 」
+    - tap: Return
+    - tap: Return
+    - character: 「
+    - tap: Return
+- mae: []
+  douji: [M, Comma, B]
+  type:
+  # {改行}{改行}{Space}
+    - tap: Return
+    - tap: Return
+    - tap: Space
+- mae: []
+  douji: [C, V, Y]
+  type:
+  # +{Home}
+    - press: Shift
+    - tap: Home
+    - release: Shift
+- mae: []
+  douji: [C, V, U]
+  type:
+  # ^x
+    - press: Control
+    - tap: X
+    - release: Control
+- mae: []
+  douji: [C, V, I]
+  type:
+  # {vk1Csc079} 再変換
+    - tap: Henkan
+- mae: []
+  douji: [C, V, O]
+  type:
+  # ^v
+    - press: Control
+    - tap: V
+    - release: Control
+- mae: []
+  douji: [C, V, P]
+  type:
+  # ^z
+    - press: Control
+    - tap: Z
+    - release: Control
+- mae: []
+  douji: [C, V, H]
+  type:
+  # ^c
+    - press: Control
+    - tap: C
+    - release: Control
+- mae: []
+  douji: [C, V, J]
+  type:
+  # {←}
+    - repeat: true
+    - tap: LeftArrow
+- mae: []
+  douji: [C, V, K]
+  type:
+  # {→}
+    - repeat: true
+    - tap: RightArrow
+- mae: []
+  douji: [C, V, L]
+  type:
+  # {改行}{Space}+{Home}^x{BS} コピークリア
+    - tap: Return
+    - tap: Space
+    - press: Shift
+    - tap: Home
+    - release: Shift
+    - press: Control
+    - tap: x
+    - release: Control
+    - tap: Backspace
+- mae: []
+  douji: [C, V, Semicolon]
+  type:
+  # ^y
+    - press: Control
+    - tap: y
+    - release: Control
+- mae: []
+  douji: [C, V, N]
+  type:
+  # +{End}
+    - press: Shift
+    - tap: End
+    - release: Shift
+- mae: []
+  douji: [C, V, M]
+  type:
+  # +{←}
+    - repeat: true
+    - press: Shift
+    - tap: LeftArrow
+    - release: Shift
+- mae: []
+  douji: [C, V, Comma]
+  type:
+  # +{→}
+    - repeat: true
+    - press: Shift
+    - tap: RightArrow
+    - release: Shift
+- mae: []
+  douji: [C, V, Period]
+  type:
+  # +{← 7}
+    - repeat: true
+    - press: Shift
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - release: Shift
+- mae: []
+  douji: [C, V, Slash]
+  type:
+  # +{→ 7}
+    - repeat: true
+    - press: Shift
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - release: Shift

@@ -13,34 +13,34 @@ namespace Benkei
         public int KeyCode;
         public bool IsKeyDown;
         public bool IsKeyUp;
+        public bool UseImeOnEngine;
     }
 
     internal sealed class KeyboardInterceptor : IDisposable
     {
-        private readonly NaginataEngine _engine;
+        private readonly NaginataEngine _imeOnEngine;
+        private readonly NaginataEngine _imeOffEngine;
         private readonly KeyActionExecutor _executor;
-        private readonly AlphabetConfig _alphabetConfig;
         private readonly Action<bool> _conversionStateChanged;
         private readonly HashSet<int> _pressedPhysicalKeys = new HashSet<int>();
+        private readonly Dictionary<int, bool> _keyEngineBindings = new Dictionary<int, bool>();
         private readonly LowLevelKeyboardProc _callback;
         private IntPtr _hookHandle = IntPtr.Zero;
         private bool _allowRepeat;
         private bool _isRepeating;
         private volatile bool _conversionEnabled = true;
-        private int hjbuf = -1; // HJ,FG同時押しバッファ
         private bool _ctrlPressed;
         private bool _shiftPressed;
         private bool _altPressed;
-        private bool _windowsPressed;
         private readonly ConcurrentQueue<KeyEventData> _keyEventQueue = new ConcurrentQueue<KeyEventData>();
         private readonly AutoResetEvent _keyEventSignal = new AutoResetEvent(false);
         private Thread _workerThread;
         private volatile bool _workerRunning;
 
-        public KeyboardInterceptor(NaginataEngine engine, AlphabetConfig alphabetConfig, Action<bool> conversionStateChanged = null)
+        public KeyboardInterceptor(NaginataEngine imeOnEngine, NaginataEngine imeOffEngine, Action<bool> conversionStateChanged = null)
         {
-            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
-            _alphabetConfig = alphabetConfig ?? throw new ArgumentNullException(nameof(alphabetConfig));
+            _imeOnEngine = imeOnEngine ?? throw new ArgumentNullException(nameof(imeOnEngine));
+            _imeOffEngine = imeOffEngine ?? throw new ArgumentNullException(nameof(imeOffEngine));
             _conversionStateChanged = conversionStateChanged;
             _callback = HookCallback;
             _executor = new KeyActionExecutor(SetRepeatAllowed, ResetStateInternal);
@@ -189,53 +189,33 @@ namespace Benkei
                     return (IntPtr)1;
                 }
 
-                // ここから「IME 状態が必要か？」を先に判定して、
-                // 不要なキーは IME 状態問い合わせなしで即パスする（軽量化）
-                var isNaginataKey = _engine.IsNaginataKey(keyCode);
-                var isImeToggleCandidate = IsImeToggleCandidate(keyCode);
-
-                var hasAlphabetMapping = _alphabetConfig != null && _alphabetConfig.TryGetRemappedKey(keyCode, out _);
-                var anyModifierPressed = _ctrlPressed || _shiftPressed || _altPressed || _windowsPressed;
-
-                var needsImeState =
-                    isNaginataKey ||                      // Naginata処理の可否に必要
-                    isImeToggleCandidate ||               // H/J/F/G の処理に必要
-                    (hasAlphabetMapping && anyModifierPressed); // 修飾キー＋リマップ時に必要
-
-                if (!needsImeState)
+                var isNaginataKey = _imeOnEngine.IsNaginataKey(keyCode);
+                if (!isNaginataKey)
                 {
-                    // ここに来るキーはBenkei側で何もしないので即パス
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
-                var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
-
-                if (isJapaneseInputActive && anyModifierPressed && TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp))
+                bool useImeOnEngine;
+                if (_keyEngineBindings.TryGetValue(keyCode, out var existingBinding))
                 {
-                    return (IntPtr)1;
+                    useImeOnEngine = existingBinding;
                 }
-
-                if (!isJapaneseInputActive && TryHandleImeOffKey(keyCode, isKeyDown, isKeyUp))
+                else
                 {
-                    return (IntPtr)1;
-                }
-
-                if (!isNaginataKey || !isJapaneseInputActive)
-                {
-                    if (isKeyUp)
+                    if (!isKeyDown)
                     {
-                        // 記号入力で英字モードになっているときにキーアップすると、キーが押されっぱなしになる
-                        if (_pressedPhysicalKeys.Contains(keyCode))
-                        {
-                            _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = false, IsKeyUp = true });
-                            _keyEventSignal.Set();
-                        }
-                        _pressedPhysicalKeys.Remove(keyCode);
-                        _isRepeating = false;
-                        _allowRepeat = false;
-
+                        return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                     }
 
+                    var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
+                    useImeOnEngine = isJapaneseInputActive;
+                    _keyEngineBindings[keyCode] = useImeOnEngine;
+                }
+
+                var targetEngine = useImeOnEngine ? _imeOnEngine : _imeOffEngine;
+                if (targetEngine == null)
+                {
+                    _keyEngineBindings.Remove(keyCode);
                     return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                 }
 
@@ -257,7 +237,7 @@ namespace Benkei
                     }
 
                     HookLog($"[Interceptor] KeyDown: {keyCode}");
-                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = true, IsKeyUp = false });
+                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = true, IsKeyUp = false, UseImeOnEngine = useImeOnEngine });
                     _keyEventSignal.Set();
                     return (IntPtr)1;
                 }
@@ -266,15 +246,14 @@ namespace Benkei
                 {
                     if (!_pressedPhysicalKeys.Contains(keyCode))
                     {
-                        // 押されていないキーの離鍵はOSに渡す（IME OFF中に押されたキーの可能性があるため）
+                        _keyEngineBindings.Remove(keyCode);
                         return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                     }
 
                     _pressedPhysicalKeys.Remove(keyCode);
-                    
+
                     if (_isRepeating)
                     {
-                        // リピート中にキーを離した場合、キューを空にする
                         while (_keyEventQueue.TryDequeue(out _)) { }
                         HookLog($"[Interceptor] リピート解除 & キュークリア: {keyCode}");
                     }
@@ -282,12 +261,8 @@ namespace Benkei
                     _isRepeating = false;
                     _allowRepeat = false;
                     HookLog($"[Interceptor] KeyUp: {keyCode}");
-                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = false, IsKeyUp = true });
-
-                    // if (_pressedPhysicalKeys.Count == 0)
-                    // {
-                    //     _keyEventQueue.Enqueue(new KeyEventData { KeyCode = 0xffff, IsKeyDown = true, IsKeyUp = false });
-                    // }
+                    _keyEngineBindings.Remove(keyCode);
+                    _keyEventQueue.Enqueue(new KeyEventData { KeyCode = keyCode, IsKeyDown = false, IsKeyUp = true, UseImeOnEngine = useImeOnEngine });
 
                     _keyEventSignal.Set();
                     return (IntPtr)1;
@@ -301,135 +276,6 @@ namespace Benkei
             }
 
             return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
-        }
-
-        private bool TryHandleImeOffKey(int keyCode, bool isKeyDown, bool isKeyUp)
-        {
-            if (isKeyDown)
-            {
-                if (hjbuf == -1 && IsImeToggleCandidate(keyCode))
-                {
-                    hjbuf = keyCode;
-                    return true;
-                }
-
-                if (hjbuf > -1)
-                {
-                    if (IsImeToggleCandidate(keyCode))
-                    {
-                        if (IsImeOnCombo(hjbuf, keyCode))
-                        {
-                            Logger.Log("[Interceptor] IME ON トグル");
-                            IMEON();
-                            hjbuf = -1;
-                            return true;
-                        }
-
-                        if (IsImeOffCombo(hjbuf, keyCode))
-                        {
-                            Logger.Log("[Interceptor] IME OFF トグル");
-                            IMEOFF();
-                            hjbuf = -1;
-                            return true;
-                        }
-
-                        SendRemappedTap(hjbuf);
-                        SendRemappedTap(keyCode);
-                        hjbuf = -1;
-                        return true;
-                    }
-
-                    SendRemappedTap(hjbuf);
-                    hjbuf = -1;
-                }
-            }
-            else if (isKeyUp)
-            {
-                if (hjbuf > -1 && hjbuf == keyCode)
-                {
-                    SendRemappedTap(hjbuf);
-                    hjbuf = -1;
-                    return true;
-                }
-            }
-
-            return TryHandleAlphabetRemap(keyCode, isKeyDown, isKeyUp);
-        }
-
-        private bool TryHandleAlphabetRemap(int keyCode, bool isKeyDown, bool isKeyUp)
-        {
-            if (_alphabetConfig == null)
-            {
-                return false;
-            }
-
-            var hasMapping = _alphabetConfig.TryGetRemappedKey(keyCode, out _);
-            if (!hasMapping)
-            {
-                return false;
-            }
-
-            if (isKeyDown)
-            {
-                SendRemappedTap(keyCode);
-                return true;
-            }
-
-            if (isKeyUp)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private void SendRemappedTap(int keyCode)
-        {
-            var targetKey = ResolveRemappedKey(keyCode);
-            _executor.TapKey((ushort)targetKey);
-        }
-
-        private int ResolveRemappedKey(int keyCode)
-        {
-            if (_alphabetConfig != null && _alphabetConfig.TryGetRemappedKey(keyCode, out var mapped))
-            {
-                return mapped;
-            }
-
-            return keyCode;
-        }
-
-        private static bool IsImeToggleCandidate(int keyCode)
-        {
-            return keyCode == (int)Keys.H || keyCode == (int)Keys.J || keyCode == (int)Keys.F || keyCode == (int)Keys.G;
-        }
-
-        private static bool IsImeOnCombo(int first, int second)
-        {
-            return (first == (int)Keys.H && second == (int)Keys.J) || (first == (int)Keys.J && second == (int)Keys.H);
-        }
-
-        private static bool IsImeOffCombo(int first, int second)
-        {
-            return (first == (int)Keys.F && second == (int)Keys.G) || (first == (int)Keys.G && second == (int)Keys.F);
-        }
-
-        private void IMEON()
-        {
-            if (!ImeUtility.TryTurnOnHiragana())
-            {
-                Logger.Log("[Interceptor] IME ON 失敗");
-            }
-            _engine.Reset();
-        }
-
-        private void IMEOFF()
-        {
-            if (!ImeUtility.TryTurnOff())
-            {
-                Logger.Log("[Interceptor] IME OFF 失敗");
-            }
-            _engine.Reset();
         }
 
         private void SetRepeatAllowed(bool allowed)
@@ -466,12 +312,13 @@ namespace Benkei
 
         private void ResetStateInternal()
         {
-            _engine.Reset();
+            _imeOnEngine.Reset();
+            _imeOffEngine.Reset();
             _pressedPhysicalKeys.Clear();
+            _keyEngineBindings.Clear();
             _isRepeating = false;
             _allowRepeat = false;
             _executor.ReleaseLatchedKeys();
-            hjbuf = -1;
             _ctrlPressed = false;
             _shiftPressed = false;
             _altPressed = false;
@@ -490,11 +337,6 @@ namespace Benkei
         private static bool IsAltKey(int keyCode)
         {
             return keyCode == (int)Keys.Menu || keyCode == (int)Keys.RMenu;
-        }
-
-        private static bool IsWindowsKey(int keyCode)
-        {
-            return keyCode == (int)Keys.RWin || keyCode == (int)Keys.LWin;
         }
 
         private bool TryUpdateModifierState(int keyCode, bool isKeyDown, bool isKeyUp)
@@ -517,12 +359,6 @@ namespace Benkei
                 return true;
             }
 
-            if (IsWindowsKey(keyCode))
-            {
-                _windowsPressed = isKeyDown ? true : isKeyUp ? false : _windowsPressed;
-                return true;
-            }
-
             return false;
         }
 
@@ -536,19 +372,20 @@ namespace Benkei
                 {
                     try
                     {
+                        var engine = eventData.UseImeOnEngine ? _imeOnEngine : _imeOffEngine;
+                        if (engine == null)
+                        {
+                            continue;
+                        }
+
                         List<NaginataAction> actions;
-                        // if (eventData.KeyCode == 0xffff)
-                        // {
-                        //     _engine.Reset();
-                        //     continue;
-                        // }
                         if (eventData.IsKeyDown)
                         {
-                            actions = _engine.HandleKeyDown(eventData.KeyCode);
+                            actions = engine.HandleKeyDown(eventData.KeyCode);
                         }
                         else if (eventData.IsKeyUp)
                         {
-                            actions = _engine.HandleKeyUp(eventData.KeyCode);
+                            actions = engine.HandleKeyUp(eventData.KeyCode);
                         }
                         else
                         {
