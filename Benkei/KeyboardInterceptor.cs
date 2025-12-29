@@ -189,10 +189,20 @@ namespace Benkei
                     return (IntPtr)1;
                 }
 
-                var isNaginataKey = _imeOnEngine.IsNaginataKey(keyCode);
-                if (!isNaginataKey)
+                var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
+                if (isJapaneseInputActive)
                 {
-                    return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                    var isNaginataKey = _imeOnEngine.IsNaginataKey(keyCode);
+                    if (!isNaginataKey)
+                    {
+                        return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                    }
+                } else {
+                    var isConversionKey = _imeOffEngine.IsConversionKey(keyCode);
+                    if (!isConversionKey)
+                    {
+                        return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
+                    }
                 }
 
                 bool useImeOnEngine;
@@ -207,7 +217,6 @@ namespace Benkei
                         return CallNextHookEx(_hookHandle, nCode, wParam, lParam);
                     }
 
-                    var isJapaneseInputActive = ImeUtility.IsJapaneseInputActive();
                     useImeOnEngine = isJapaneseInputActive;
                     _keyEngineBindings[keyCode] = useImeOnEngine;
                 }

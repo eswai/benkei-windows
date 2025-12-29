@@ -67,15 +67,16 @@ namespace Benkei
 
             ["Comma"] = (int)Keys.Oemcomma,
             ["Period"] = (int)Keys.OemPeriod,
-            ["Slash"] = (int)Keys.OemQuestion,
+            ["Slash"] = (int)Keys.Oem2,
             ["Semicolon"] = (int)Keys.Oemplus,
-            ["Quote"] = (int)Keys.OemQuotes,
+            ["Colon"] = (int)Keys.OemSemicolon,
             ["Minus"] = (int)Keys.OemMinus,
-            ["Equal"] = (int)Keys.Oemplus,
-            ["LeftBracket"] = (int)Keys.OemOpenBrackets,
-            ["RightBracket"] = (int)Keys.OemCloseBrackets,
-            ["Backslash"] = (int)Keys.Oem5,
-            ["Grave"] = (int)Keys.Oemtilde,
+            ["Caret"] = (int)Keys.OemQuotes, //^
+            ["Yen"] = (int)Keys.OemPipe, //yen
+            ["Atmark"] = (int)Keys.Oemtilde, //@
+            ["LeftBracket"] = (int)Keys.Oem4, //[
+            ["RightBracket"] = (int)Keys.Oem6, //]
+            ["Backslash"] = (int)Keys.Oem102, //\
 
             ["Shift"] = (int)Keys.ShiftKey,
             ["RightShift"] = (int)Keys.RShiftKey,
@@ -90,7 +91,7 @@ namespace Benkei
             ["ImeOff"] = 0x1A,
             ["Henkan"] = (int)Keys.IMEConvert,
             ["Muhenkan"] = (int)Keys.IMENonconvert,
-            ["KanaMode"] = (int)Keys.KanaMode
+            ["Kana"] = 242
         };
 
         private static readonly HashSet<int> NaginataKeys = new HashSet<int>(
@@ -104,6 +105,25 @@ namespace Benkei
                 GetRequiredKeyCode("Z"), GetRequiredKeyCode("X"), GetRequiredKeyCode("C"), GetRequiredKeyCode("V"),
                 GetRequiredKeyCode("B"), GetRequiredKeyCode("N"), GetRequiredKeyCode("M"), GetRequiredKeyCode("Comma"),
                 GetRequiredKeyCode("Period"), GetRequiredKeyCode("Slash"), GetRequiredKeyCode("Space"), GetRequiredKeyCode("Return")
+            }
+        );
+
+        private static readonly HashSet<int> ConversionKeys = new HashSet<int>(
+            new[]
+            {
+                GetRequiredKeyCode("Q"), GetRequiredKeyCode("W"), GetRequiredKeyCode("E"), GetRequiredKeyCode("R"),
+                GetRequiredKeyCode("T"), GetRequiredKeyCode("Y"), GetRequiredKeyCode("U"), GetRequiredKeyCode("I"),
+                GetRequiredKeyCode("O"), GetRequiredKeyCode("P"), GetRequiredKeyCode("A"), GetRequiredKeyCode("S"),
+                GetRequiredKeyCode("D"), GetRequiredKeyCode("F"), GetRequiredKeyCode("G"), GetRequiredKeyCode("H"),
+                GetRequiredKeyCode("J"), GetRequiredKeyCode("K"), GetRequiredKeyCode("L"), GetRequiredKeyCode("Semicolon"),
+                GetRequiredKeyCode("Z"), GetRequiredKeyCode("X"), GetRequiredKeyCode("C"), GetRequiredKeyCode("V"),
+                GetRequiredKeyCode("B"), GetRequiredKeyCode("N"), GetRequiredKeyCode("M"), GetRequiredKeyCode("Comma"),
+                GetRequiredKeyCode("Period"), GetRequiredKeyCode("Slash"), GetRequiredKeyCode("Space"), GetRequiredKeyCode("Return"),
+                GetRequiredKeyCode("0"), GetRequiredKeyCode("1"), GetRequiredKeyCode("2"), GetRequiredKeyCode("3"),
+                GetRequiredKeyCode("4"), GetRequiredKeyCode("5"), GetRequiredKeyCode("6"), GetRequiredKeyCode("7"),
+                GetRequiredKeyCode("8"), GetRequiredKeyCode("9"), GetRequiredKeyCode("Minus"), GetRequiredKeyCode("Colon"),
+                GetRequiredKeyCode("LeftBracket"), GetRequiredKeyCode("RightBracket"), GetRequiredKeyCode("Backslash"),
+                GetRequiredKeyCode("Caret"), GetRequiredKeyCode("Yen"), GetRequiredKeyCode("Atmark")
             }
         );
 
@@ -122,6 +142,8 @@ namespace Benkei
         }
 
         public static bool IsNaginataKey(int keyCode) => NaginataKeys.Contains(keyCode);
+
+        public static bool IsConversionKey(int keyCode) => ConversionKeys.Contains(keyCode);
 
         public static IReadOnlyCollection<int> GetNaginataKeys() => NaginataKeys;
 

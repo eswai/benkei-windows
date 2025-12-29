@@ -34,6 +34,7 @@ namespace Benkei
         }
 
         public bool IsNaginataKey(int keyCode) => VirtualKeyMapper.IsNaginataKey(keyCode);
+        public bool IsConversionKey(int keyCode) => VirtualKeyMapper.IsConversionKey(keyCode);
 
         public void Reset()
         {

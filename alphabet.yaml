@@ -127,6 +127,367 @@
   douji: [Slash]
   type:
     - tap: Slash
+- mae: []
+  douji: [1]
+  type:
+    - tap: 1
+- mae: []
+  douji: [2]
+  type:
+    - tap: 2
+- mae: []
+  douji: [3]
+  type:
+    - tap: 3
+- mae: []
+  douji: [4]
+  type:
+    - tap: 4
+- mae: []
+  douji: [5]
+  type:
+    - tap: 5
+- mae: []
+  douji: [6]
+  type:
+    - tap: 6
+- mae: []
+  douji: [7]
+  type:
+    - tap: 7
+- mae: []
+  douji: [8]
+  type:
+    - tap: 8
+- mae: []
+  douji: [9]
+  type:
+    - tap: 9
+- mae: []
+  douji: [0]
+  type:
+    - tap: 0
+- mae: []
+  douji: [Minus]
+  type:
+    - tap: Minus
+- mae: []
+  douji: [LeftBracket]
+  type:
+    - tap: LeftBracket
+- mae: []
+  douji: [RightBracket]
+  type:
+    - tap: RightBracket
+- mae: []
+  douji: [Backslash]
+  type:
+    - tap: Backslash
+- mae: []
+  douji: [Colon]
+  type:
+    - tap: Colon
+- mae: []
+  douji: [Yen]
+  type:
+    - tap: Yen
+- mae: []
+  douji: [Caret]
+  type:
+    - tap: Caret
+- mae: []
+  douji: [Atmark]
+  type:
+    - tap: Atmark
+# ---------------------------------------- シフト
+- mae: [Space]
+  douji: [Q]
+  type:
+    - press: Shift
+    - tap: Q
+    - release: Shift
+- mae: [Space]
+  douji: [W]
+  type:
+    - press: Shift
+    - tap: W
+    - release: Shift
+- mae: [Space]
+  douji: [E]
+  type:
+    - press: Shift
+    - tap: E
+    - release: Shift
+- mae: [Space]
+  douji: [R]
+  type:
+    - press: Shift
+    - tap: R
+    - release: Shift
+- mae: [Space]
+  douji: [T]
+  type:
+    - press: Shift
+    - tap: T
+    - release: Shift
+- mae: [Space]
+  douji: [Y]
+  type:
+    - press: Shift
+    - tap: Y
+    - release: Shift
+- mae: [Space]
+  douji: [U]
+  type:
+    - press: Shift
+    - tap: U
+    - release: Shift
+- mae: [Space]
+  douji: [I]
+  type:
+    - press: Shift
+    - tap: I
+    - release: Shift
+- mae: [Space]
+  douji: [O]
+  type:
+    - press: Shift
+    - tap: O
+    - release: Shift
+- mae: [Space]
+  douji: [P]
+  type:
+    - press: Shift
+    - tap: P
+    - release: Shift
+- mae: [Space]
+  douji: [A]
+  type:
+    - press: Shift
+    - tap: A
+    - release: Shift
+- mae: [Space]
+  douji: [S]
+  type:
+    - press: Shift
+    - tap: S
+    - release: Shift
+- mae: [Space]
+  douji: [D]
+  type:
+    - press: Shift
+    - tap: D
+    - release: Shift
+- mae: [Space]
+  douji: [F]
+  type:
+    - press: Shift
+    - tap: F
+    - release: Shift
+- mae: [Space]
+  douji: [G]
+  type:
+    - press: Shift
+    - tap: G
+    - release: Shift
+- mae: [Space]
+  douji: [H]
+  type:
+    - press: Shift
+    - tap: H
+    - release: Shift
+- mae: [Space]
+  douji: [J]
+  type:
+    - press: Shift
+    - tap: J
+    - release: Shift
+- mae: [Space]
+  douji: [K]
+  type:
+    - press: Shift
+    - tap: K
+    - release: Shift
+- mae: [Space]
+  douji: [L]
+  type:
+    - press: Shift
+    - tap: L
+    - release: Shift
+- mae: [Space]
+  douji: [Semicolon]
+  type:
+    - press: Shift
+    - tap: Semicolon
+    - release: Shift
+- mae: [Space]
+  douji: [Z]
+  type:
+    - press: Shift
+    - tap: Z
+    - release: Shift
+- mae: [Space]
+  douji: [X]
+  type:
+    - press: Shift
+    - tap: X
+    - release: Shift
+- mae: [Space]
+  douji: [C]
+  type:
+    - press: Shift
+    - tap: C
+    - release: Shift
+- mae: [Space]
+  douji: [V]
+  type:
+    - press: Shift
+    - tap: V
+    - release: Shift
+- mae: [Space]
+  douji: [B]
+  type:
+    - press: Shift
+    - tap: B
+    - release: Shift
+- mae: [Space]
+  douji: [N]
+  type:
+    - press: Shift
+    - tap: N
+    - release: Shift
+- mae: [Space]
+  douji: [M]
+  type:
+    - press: Shift
+    - tap: M
+    - release: Shift
+- mae: [Space]
+  douji: [Comma]
+  type:
+    - press: Shift
+    - tap: Comma
+    - release: Shift
+- mae: [Space]
+  douji: [Period]
+  type:
+    - press: Shift
+    - tap: Period
+    - release: Shift
+- mae: [Space]
+  douji: [Slash]
+  type:
+    - press: Shift
+    - tap: Slash
+    - release: Shift
+- mae: [Space]
+  douji: [1]
+  type:
+    - press: Shift
+    - tap: 1
+    - release: Shift
+- mae: [Space]
+  douji: [2]
+  type:
+    - press: Shift
+    - tap: 2
+    - release: Shift
+- mae: [Space]
+  douji: [3]
+  type:
+    - press: Shift
+    - tap: 3
+    - release: Shift
+- mae: [Space]
+  douji: [4]
+  type:
+    - press: Shift
+    - tap: 4
+    - release: Shift
+- mae: [Space]
+  douji: [5]
+  type:
+    - press: Shift
+    - tap: 5
+    - release: Shift
+- mae: [Space]
+  douji: [6]
+  type:
+    - press: Shift
+    - tap: 6
+    - release: Shift
+- mae: [Space]
+  douji: [7]
+  type:
+    - press: Shift
+    - tap: 7
+    - release: Shift
+- mae: [Space]
+  douji: [8]
+  type:
+    - press: Shift
+    - tap: 8
+    - release: Shift
+- mae: [Space]
+  douji: [9]
+  type:
+    - press: Shift
+    - tap: 9
+    - release: Shift
+- mae: [Space]
+  douji: [0]
+  type:
+    - press: Shift
+    - tap: 0
+    - release: Shift
+- mae: [Space]
+  douji: [Minus]
+  type:
+    - press: Shift
+    - tap: Minus
+    - release: Shift
+- mae: [Space]
+  douji: [LeftBracket]
+  type:
+    - press: Shift
+    - tap: LeftBracket
+    - release: Shift
+- mae: [Space]
+  douji: [RightBracket]
+  type:
+    - press: Shift
+    - tap: RightBracket
+    - release: Shift
+- mae: [Space]
+  douji: [Backslash]
+  type:
+    - press: Shift
+    - tap: Backslash
+    - release: Shift
+- mae: [Space]
+  douji: [Colon]
+  type:
+    - press: Shift
+    - tap: Colon
+    - release: Shift
+- mae: [Space]
+  douji: [Yen]
+  type:
+    - press: Shift
+    - tap: Yen
+    - release: Shift
+- mae: [Space]
+  douji: [Caret]
+  type:
+    - press: Shift
+    - tap: Caret
+    - release: Shift
+- mae: [Space]
+  douji: [Atmark]
+  type:
+    - press: Shift
+    - tap: Atmark
+    - release: Shift
 # ---------------------------------------- コンボ
 - mae: []
   douji: [F, G]
