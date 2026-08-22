@@ -227,136 +227,95 @@ namespace Benkei
 
         private int NumberOfMatches(IList<int> keys)
         {
-            if (keys.Count == 0)
-            {
-                return 0;
-            }
-
-            var normalizedKeys = NormalizeKeys(keys);
-            var keySet = new HashSet<int>(normalizedKeys);
-            var matches = 0;
-
-            foreach (var rule in _rules)
-            {
-                switch (normalizedKeys.Count)
-                {
-                    case 1:
-                        if (rule.Mae.SetEquals(keySet))
-                        {
-                            matches++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.SetEquals(keySet))
-                        {
-                            matches++;
-                        }
-
-                        break;
-                    case 2:
-                        if (rule.Mae.SetEquals(keySet))
-                        {
-                            matches++;
-                        }
-
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 1)))
-                        {
-                            matches++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.SetEquals(keySet))
-                        {
-                            matches++;
-                        }
-
-                        break;
-                    default:
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 2)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 2)))
-                        {
-                            matches++;
-                        }
-
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.SetEquals(SliceSet(normalizedKeys, 1)))
-                        {
-                            matches++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.SetEquals(keySet))
-                        {
-                            matches++;
-                        }
-
-                        break;
-                }
-            }
-
-            return matches;
+            return CountEntries(keys, false);
         }
 
         private int NumberOfCandidates(IList<int> keys)
         {
-            if (keys.Count == 0)
+            return CountEntries(keys, true);
+        }
+
+        private int CountEntries(IList<int> keys, bool candidatesOnly)
+        {
+            if (keys == null || keys.Count == 0)
             {
                 return 0;
             }
 
             var normalizedKeys = NormalizeKeys(keys);
-            var keySet = new HashSet<int>(normalizedKeys);
-            var candidates = 0;
+            var key0 = new HashSet<int> { normalizedKeys[0] };
+            var key1 = normalizedKeys.Count > 1
+                ? new HashSet<int> { normalizedKeys[1] }
+                : new HashSet<int>();
+            var key2 = normalizedKeys.Count > 2
+                ? new HashSet<int> { normalizedKeys[2] }
+                : new HashSet<int>();
+            var key01 = new HashSet<int>(key0);
+            key01.UnionWith(key1);
+            var key12 = new HashSet<int>(key1);
+            key12.UnionWith(key2);
+            var key012 = new HashSet<int>(key01);
+            key012.UnionWith(key2);
+            var count = 0;
 
             foreach (var rule in _rules)
             {
+                bool matches;
                 switch (normalizedKeys.Count)
                 {
                     case 1:
-                        if (rule.Mae.IsSupersetOf(keySet))
-                        {
-                            candidates++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(keySet))
-                        {
-                            candidates++;
-                        }
-
+                        matches = candidatesOnly
+                            ? rule.Mae.IsSupersetOf(key0) || (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(key0))
+                            : rule.Mae.SetEquals(key0) || (rule.Mae.Count == 0 && rule.Douji.SetEquals(key0));
                         break;
                     case 2:
-                        if (rule.Mae.SetEquals(keySet))
-                        {
-                            candidates++;
-                        }
-
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 1)))
-                        {
-                            candidates++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(keySet))
-                        {
-                            candidates = rule.Douji.Count > 2 ? Math.Max(candidates, 2) : candidates + 1;
-                        }
-
+                        matches = candidatesOnly
+                            ? rule.Mae.SetEquals(key01)
+                                || (rule.Mae.SetEquals(key0) && rule.Douji.IsSupersetOf(key1))
+                                || (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(key01))
+                            : rule.Mae.SetEquals(key01)
+                                || (rule.Mae.SetEquals(key0) && rule.Douji.SetEquals(key1))
+                                || (rule.Mae.Count == 0 && rule.Douji.SetEquals(key01));
                         break;
                     default:
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 2)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 2)))
-                        {
-                            candidates++;
-                        }
-
-                        if (rule.Mae.SetEquals(SliceSet(normalizedKeys, 0, 1)) && rule.Douji.IsSupersetOf(SliceSet(normalizedKeys, 1)))
-                        {
-                            candidates++;
-                        }
-
-                        if (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(keySet))
-                        {
-                            candidates++;
-                        }
-
+                        matches = candidatesOnly
+                            ? (rule.Mae.SetEquals(key01) && rule.Douji.IsSupersetOf(key2))
+                                || (rule.Mae.SetEquals(key0) && rule.Douji.IsSupersetOf(key12))
+                                || (rule.Mae.Count == 0 && rule.Douji.IsSupersetOf(key012))
+                            : (rule.Mae.SetEquals(key01) && rule.Douji.SetEquals(key2))
+                                || (rule.Mae.SetEquals(key0) && rule.Douji.SetEquals(key12))
+                                || (rule.Mae.Count == 0 && rule.Douji.SetEquals(key012));
                         break;
+                }
+
+                if (!matches)
+                {
+                    continue;
+                }
+
+                if (candidatesOnly && normalizedKeys.Count == 2 && RuleHasMoreKeysThan(rule, key01))
+                {
+                    count = Math.Max(count, 2);
+                }
+                else
+                {
+                    count++;
+                }
+
+                if (count > 1)
+                {
+                    return 2;
                 }
             }
 
-            return candidates;
+            return count;
+        }
+
+        private static bool RuleHasMoreKeysThan(NaginataRule rule, HashSet<int> inputKeys)
+        {
+            var ruleKeys = new HashSet<int>(rule.Mae);
+            ruleKeys.UnionWith(rule.Douji);
+            return ruleKeys.Count > inputKeys.Count;
         }
 
         private static IList<int> NormalizeKeys(IList<int> keys)
@@ -367,28 +326,6 @@ namespace Benkei
             }
 
             return keys.Select(k => k == VirtualKeyMapper.Return ? VirtualKeyMapper.Space : k).ToList();
-        }
-
-        private static HashSet<int> SliceSet(IList<int> source, int startIndex, int length)
-        {
-            var set = new HashSet<int>();
-            if (source == null || startIndex >= source.Count || length <= 0)
-            {
-                return set;
-            }
-
-            var maxLength = Math.Min(length, source.Count - startIndex);
-            for (var i = 0; i < maxLength; i++)
-            {
-                set.Add(source[startIndex + i]);
-            }
-
-            return set;
-        }
-
-        private static HashSet<int> SliceSet(IList<int> source, int startIndex)
-        {
-            return SliceSet(source, startIndex, source.Count - startIndex);
         }
 
         private static List<int> MergeChain(IEnumerable<int> chain, IEnumerable<int> existing)

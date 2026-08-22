@@ -528,8 +528,8 @@
 - mae: []
   douji: [J, K, T]
   type:
-  # ・(未確定)
-    - character: ・
+  # /
+    - tap: Slash
 - mae: []
   douji: [J, K, A]
   type:
@@ -606,8 +606,9 @@
 - mae: []
   douji: [D, F, P]
   type:
-  # +{Esc 2} 入力キャンセル
+  # +{Esc 3} 入力キャンセル
     - press: Shift
+    - tap: Escape
     - tap: Escape
     - tap: Escape
     - release: Shift
@@ -726,7 +727,7 @@
   douji: [M, Comma, T]
   type:
   # 〇{改行}
-    - character: 〇
+    - character: ○
 - mae: []
   douji: [M, Comma, A]
   type:
@@ -793,7 +794,7 @@
   douji: [M, Comma, B]
   type:
   # {改行}{改行}{Space}
-    - tap: Return
+    - character: 」
     - tap: Return
     - tap: Space
 - mae: []
@@ -851,23 +852,29 @@
 - mae: []
   douji: [C, V, L]
   type:
-  # {改行}{Space}+{Home}^x{BS} コピークリア
-    - tap: Return
-    - tap: Space
+  # +{← 7}
     - press: Shift
-    - tap: Home
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
     - release: Shift
-    - press: Control
-    - tap: x
-    - release: Control
-    - tap: Backspace
 - mae: []
   douji: [C, V, Semicolon]
   type:
-  # ^y
-    - press: Control
-    - tap: y
-    - release: Control
+  # +{→ 7}
+    - press: Shift
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - release: Shift
 - mae: []
   douji: [C, V, N]
   type:
@@ -894,28 +901,15 @@
 - mae: []
   douji: [C, V, Period]
   type:
-  # +{← 7}
-    - repeat: true
+  # {End}+{Home}
+    - tap: End
     - press: Shift
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
+    - tap: Home
     - release: Shift
 - mae: []
   douji: [C, V, Slash]
   type:
-  # +{→ 7}
-    - repeat: true
-    - press: Shift
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - release: Shift
+  # ^y
+    - press: Control
+    - tap: y
+    - release: Control

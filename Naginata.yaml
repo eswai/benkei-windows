@@ -108,12 +108,12 @@
   douji: [W]
   type:
     - tap: N
-    - tap: U
+    - tap: E
 - mae: [Space]
   douji: [Comma]
   type:
-    - tap: N
-    - tap: E
+    - tap: M
+    - tap: U
 - mae: [Space]
   douji: [J]
   type:
@@ -167,7 +167,7 @@
 - mae: [Space]
   douji: [B]
   type:
-    - tap: M
+    - tap: N
     - tap: U
 - mae: [Space]
   douji: [R]
@@ -927,6 +927,10 @@
   douji: [V, M]
   type:
     - tap: Return
+- mae: [Space]
+  douji: [V, M]
+  type:
+    - tap: Return
 - mae: []
   douji: [Space]
   type:
@@ -1045,8 +1049,9 @@
 - mae: []
   douji: [D, F, P]
   type:
-  # +{Esc 2} 入力キャンセル
+  # +{Esc 3} 入力キャンセル
     - press: Shift
+    - tap: Escape
     - tap: Escape
     - tap: Escape
     - release: Shift
@@ -1300,23 +1305,29 @@
 - mae: []
   douji: [C, V, L]
   type:
-  # {改行}{Space}+{Home}^x{BS} コピークリア
-    - tap: Return
-    - tap: Space
+  # +{← 7}
     - press: Shift
-    - tap: Home
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
+    - tap: LeftArrow
     - release: Shift
-    - press: Control
-    - tap: x
-    - release: Control
-    - tap: Backspace
 - mae: []
   douji: [C, V, Semicolon]
   type:
-  # ^y
-    - press: Control
-    - tap: y
-    - release: Control
+  # +{→ 7}
+    - press: Shift
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - tap: RightArrow
+    - release: Shift
 - mae: []
   douji: [C, V, N]
   type:
@@ -1343,31 +1354,18 @@
 - mae: []
   douji: [C, V, Period]
   type:
-  # +{← 7}
-    - repeat: true
+  # {End}+{Home}
+    - tap: End
     - press: Shift
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
-    - tap: LeftArrow
+    - tap: Home
     - release: Shift
 - mae: []
   douji: [C, V, Slash]
   type:
-  # +{→ 7}
-    - repeat: true
-    - press: Shift
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - tap: RightArrow
-    - release: Shift
+  # ^y
+    - press: Control
+    - tap: y
+    - release: Control
 # ---------------------------------------- 固有名詞モード
 - mae: []
   douji: [U, I, Q]
